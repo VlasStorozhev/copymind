@@ -4,7 +4,6 @@ import Link from 'next/link'
 
 import { AuthStartForm } from '@/components/funnel/auth-start-form'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -30,9 +29,6 @@ export function EmailPageShell({
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,250,240,0.9),rgba(255,255,255,1)_42%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center">
-        <Badge variant="outline" className="mb-6 w-fit border-border/70 bg-background/90 px-3 py-1">
-          Save your result
-        </Badge>
         {!quizResponseId ? (
           <div className="space-y-6 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm shadow-black/5 sm:p-6">
             <Alert variant="destructive">
