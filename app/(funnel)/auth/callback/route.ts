@@ -3,7 +3,11 @@ import { cookies } from 'next/headers'
 
 import { createServerClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
-import { resolveMagicLinkCallback, type MagicLinkFailureReason } from '@/lib/funnel/callback'
+import {
+  resolveCallbackSource,
+  resolveMagicLinkCallback,
+  type MagicLinkFailureReason,
+} from '@/lib/funnel/callback'
 import { recordFunnelEvent } from '@/lib/funnel/db'
 import { type AuthAttemptRecord, type AuthAttemptRepository } from '@/lib/auth/attempts'
 import { normalizeEmail, type UserProfileRecord, type UserProfileRepository } from '@/lib/auth/profiles'
@@ -227,7 +231,7 @@ export async function GET(request: Request) {
         .maybeSingle()
     : { data: null }
 
-  const source = latestVisit.data
+  const fallbackSource = latestVisit.data
     ? {
         source: latestVisit.data.source,
         medium: latestVisit.data.medium,
@@ -254,6 +258,23 @@ export async function GET(request: Request) {
   }
 
   const attempt = await authAttemptRepo.getAttemptById(authAttemptId)
+  const attemptVisit = attempt?.visit_id
+    ? await adminClient
+        .from('visits')
+        .select('source, medium, campaign')
+        .eq('id', attempt.visit_id)
+        .maybeSingle()
+    : { data: null }
+  const source = resolveCallbackSource({
+    attemptVisitSource: attemptVisit.data
+      ? {
+          source: attemptVisit.data.source,
+          medium: attemptVisit.data.medium,
+          campaign: attemptVisit.data.campaign,
+        }
+      : null,
+    fallbackSource,
+  })
   const result = await resolveMagicLinkCallback({
     authAttemptId,
     authenticatedUser: {

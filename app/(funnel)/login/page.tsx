@@ -49,9 +49,9 @@ export default async function LoginPage({
         ) : null}
         <AuthStartForm
           mode="returning_login"
-          title="Welcome back"
-          subtitle="Enter the email tied to your decision profile and we will send a secure sign-in link."
-          submitLabel="Send magic link"
+          title="Open your decision profile"
+          subtitle="Enter your email and we will send a secure link to your saved decision profile."
+          submitLabel="Send secure link"
           recoveryMessage={recoveryMessage}
         />
       </div>

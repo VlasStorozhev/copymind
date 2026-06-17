@@ -83,9 +83,9 @@ export default async function EmailPage({
         <AuthStartForm
           mode="quiz_email_capture"
           quizResponseId={quizResponseId}
-          title="Get your result link"
-          subtitle="We will email you a secure link so you can return to your decision profile later."
-          submitLabel="Send magic link"
+          title="Save your decision profile"
+          subtitle="Enter your email and we will send a secure link to open your personalized decision profile."
+          submitLabel="Send secure link"
           pageViewEventName="email_viewed"
           pageViewMetadata={{ quiz_response_id: quizResponseId }}
           recoveryMessage={recoveryMessage}

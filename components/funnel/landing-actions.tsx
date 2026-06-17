@@ -63,7 +63,7 @@ export function LandingActions({
       </Link>
       {isAdmin ? (
         <Link
-          href="/app#dashboard"
+          href="/dashboard"
           className={cn(buttonVariants({ variant: 'secondary', className: 'gap-2 px-4' }))}
         >
           <LayoutDashboard className="size-4" />

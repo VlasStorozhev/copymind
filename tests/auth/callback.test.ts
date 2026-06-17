@@ -8,7 +8,7 @@ import {
 } from '@/lib/auth/attempts'
 import type { UserProfileRecord, UserProfileRepository } from '@/lib/auth/profiles'
 import { resolveQuizEmailCaptureStart } from '@/lib/funnel/auth-start'
-import { resolveMagicLinkCallback } from '@/lib/funnel/callback'
+import { resolveCallbackSource, resolveMagicLinkCallback } from '@/lib/funnel/callback'
 
 function createAttemptRepositoryFixture() {
   const attempts: AuthAttemptRecord[] = []
@@ -138,6 +138,27 @@ describe('resolveQuizEmailCaptureStart', () => {
 })
 
 describe('resolveMagicLinkCallback', () => {
+  it('prefers attribution from the stored auth attempt visit over callback browser fallback', () => {
+    expect(
+      resolveCallbackSource({
+        attemptVisitSource: {
+          source: 'google',
+          medium: 'cpc',
+          campaign: 'launch',
+        },
+        fallbackSource: {
+          source: 'direct',
+          medium: null,
+          campaign: null,
+        },
+      }),
+    ).toEqual({
+      source: 'google',
+      medium: 'cpc',
+      campaign: 'launch',
+    })
+  })
+
   it('links visit and quiz response for quiz email capture attempts', async () => {
     const { repo } = createAttemptRepositoryFixture()
     const { repo: profileRepo } = createProfileRepositoryFixture()

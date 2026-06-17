@@ -135,7 +135,7 @@ export function QuizWizard({ authenticated }: { authenticated: boolean }) {
             }}
           >
             {submitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            {isLastStep ? 'Finish' : 'Next'}
+            {isLastStep ? 'See my result' : 'Next'}
             {!isLastStep ? <ChevronRight className="size-4" /> : null}
           </Button>
         </div>

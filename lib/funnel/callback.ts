@@ -30,6 +30,13 @@ export type MagicLinkCallbackResult =
       reason: MagicLinkFailureReason
     }
 
+export function resolveCallbackSource(input: {
+  attemptVisitSource?: MagicLinkCallbackSource | null
+  fallbackSource: MagicLinkCallbackSource
+}): MagicLinkCallbackSource {
+  return input.attemptVisitSource ?? input.fallbackSource
+}
+
 function mapAttemptFailureReason(
   reason: 'missing' | 'expired' | 'failed' | 'verified' | 'email_mismatch' | 'superseded' | 'not_pending',
 ): MagicLinkFailureReason {
