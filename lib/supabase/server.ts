@@ -7,10 +7,31 @@ import type { Database } from '@/lib/database.types';
 
 export async function createServerClient() {
   const cookieStore = await cookies();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return {
+      auth: {
+        async getUser() {
+          return { data: { user: null }, error: null };
+        },
+        async exchangeCodeForSession() {
+          return { data: { session: null }, error: null };
+        },
+        async signInWithOtp() {
+          return { data: null, error: new Error('Supabase not configured') };
+        },
+        async signOut() {
+          return { error: null };
+        },
+      },
+    } as never;
+  }
 
   return createSupabaseServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '',
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
