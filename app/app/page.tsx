@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { buttonVariants } from '@/components/ui/button'
+import { normalizeEmail } from '@/lib/auth/profiles'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { createServerClient } from '@/lib/supabase/server'
 import { DecisionProfile } from '@/components/funnel/DecisionProfile'
@@ -27,7 +28,19 @@ export default async function AppPage() {
     .eq('is_active', true)
     .maybeSingle()
 
-  const isAdmin = !!adminUser
+  let isAdmin = !!adminUser
+
+  if (!isAdmin && user.email) {
+    const normalizedEmail = normalizeEmail(user.email)
+    const { data: adminEmailUser } = await adminClient
+      .from('admin_users')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    isAdmin = !!adminEmailUser
+  }
 
   const { data: latestResponse } = await adminClient
     .from('quiz_responses')

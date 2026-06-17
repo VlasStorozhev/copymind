@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { recordFunnelEvent, getOrCreateVisit } from '@/lib/funnel/db'
 import { getOrCreateVisitorId } from '@/lib/analytics/visitor'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
@@ -36,12 +37,17 @@ export async function POST(request: Request) {
     })
   }
 
+  const supabase = await createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const adminClient = createAdminClient()
   const visit = await getOrCreateVisit({
     client: adminClient,
     visitorId,
     url: body.url ?? request.url,
     referrer: body.referrer ?? request.headers.get('referer') ?? '',
+    userId: user?.id ?? null,
   })
 
   if (!visit) {
@@ -52,7 +58,7 @@ export async function POST(request: Request) {
     client: adminClient,
     visitId: visit.id,
     eventName: body.eventName,
-    userId: visit.user_id,
+    userId: visit.user_id ?? user?.id ?? null,
     metadata:
       body.eventName === 'landing_viewed'
         ? { source: visit.source, medium: visit.medium, campaign: visit.campaign }
