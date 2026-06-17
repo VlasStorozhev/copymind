@@ -17,6 +17,7 @@ The MVP should use this fixed stack:
 - Use authenticated admin-only routes for the dashboard.
 - Use Supabase Auth for sessions and magic link authentication.
 - Use Supabase Postgres as the source of truth for funnel events, attribution, quiz responses, and dashboard data.
+- Use the Supabase Postgres `admin_users` table as the source of truth for dashboard admin access.
 - Deploy the application to Vercel.
 
 ## shadcn/ui Usage
@@ -58,3 +59,4 @@ UI requirements:
 - Store public Supabase URL/key in Vercel environment variables with `NEXT_PUBLIC_` names.
 - Store server-only Supabase keys only in server-side environment variables.
 - Do not commit `.env.local`, `.vercel`, or Supabase temporary metadata.
+- Manage dashboard admins in Supabase UI by editing the `admin_users` table.

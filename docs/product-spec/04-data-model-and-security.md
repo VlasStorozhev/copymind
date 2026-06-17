@@ -154,6 +154,34 @@ Constraints and indexes:
 - index on `decision_pattern`
 - index on `completed_at`
 
+### admin_users
+
+`admin_users` is the canonical admin access control table for the private analytics dashboard. It should be editable through the Supabase Table Editor by project maintainers.
+
+- `id`
+- `user_id`
+- `email`
+- `role`
+- `is_active`
+- `created_at`
+- `updated_at`
+
+Constraints and indexes:
+
+- `id` primary key
+- `user_id` references `auth.users(id)` and is unique when present
+- `email` unique
+- `role` defaults to `admin`
+- `is_active` defaults to `true`
+- index on `email`
+- index on `is_active`
+
+Admin lookup rules:
+
+- A dashboard user must have a valid Supabase Auth session.
+- Dashboard access is allowed only when the authenticated user's `user_id` or normalized email matches an active `admin_users` row.
+- Admin changes are made by adding, updating, or disabling rows in Supabase Table Editor.
+
 ## Supabase Security Model
 
 Row Level Security should be enabled on all application tables in Supabase Postgres.
@@ -165,10 +193,12 @@ Access rules:
 - `visits`: authenticated users can read visits linked to their own `user_id`. Anonymous visit creation should go through server API routes.
 - `funnel_events`: regular users should not read raw event tables by default. Event writes should go through server API routes so event names and metadata stay canonical.
 - `auth_attempts`: server-only table. Clients should not read or write auth attempts directly.
+- `admin_users`: regular users should not read or write admin access rows. Dashboard authorization checks should happen in trusted server code.
 - Dashboard queries require an authenticated Supabase user with admin access.
 
 Admin access:
 
-- Admin access can be implemented through an `admin_users` table keyed by `user_id` or through an environment-configured allowlist.
+- Admin access must be implemented through the `admin_users` table.
 - Dashboard routes must check both a valid Supabase Auth session and admin authorization.
+- Admin records should be manageable from Supabase UI through the Table Editor.
 - The Supabase service-role key must never be exposed to browser code.

@@ -82,7 +82,7 @@ The dashboard should prioritize clear metric cards and tables over complex chart
 
 ### Dashboard Protection
 
-The dashboard should be protected with Supabase Auth. Only authenticated users whose email or `user_id` is present in an admin allowlist or admin role table should be able to access it. Admin access configuration should be stored in environment variables or Supabase Postgres and should not be hard-coded.
+The dashboard should be protected with Supabase Auth. Only authenticated users whose email or `user_id` is present in an active `admin_users` row should be able to access it. Admin access should be managed through the Supabase Table Editor by adding, updating, or disabling `admin_users` rows. Admin access must not be hard-coded in application code or configured only through deploy-time environment variables.
 
 ### Supabase Auth vs. Custom Auth
 

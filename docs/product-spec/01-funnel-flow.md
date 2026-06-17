@@ -1,6 +1,16 @@
 ## Funnel Flow
 
-MVP guardrail: the assignment-required path is `Quiz Start Page -> Email Capture/Auth -> Mock Paywall`. The decision assessment and result page are product-specific additions. They should not prevent the required 3-step MVP path from being completed, tested, and demonstrated.
+The product implements one canonical flow:
+
+`Landing / Quiz Start -> Decision Assessment -> Email Capture/Auth -> Decision Profile Result -> Mock Paywall`
+
+This flow satisfies the assignment-required 3-step funnel while adding a short assessment and deterministic result page as product-specific value:
+
+- `Landing / Quiz Start` covers the required quiz start page with title and CTA.
+- `Email Capture/Auth` covers the required email capture page, email validation, submit action, and user identification logic.
+- `Mock Paywall` covers the required final paywall page with a "Buy" button and no real payment integration.
+
+The decision assessment and result page are part of the product experience, not a separate alternative flow.
 
 UI guardrail: implement funnel UI with Tailwind CSS and shadcn/ui components. Use `Button` for primary CTAs, `Input` for email capture, form primitives for validation, and `Alert` for magic-link and recovery states.
 
@@ -212,24 +222,29 @@ Tracking:
 
 - `result_viewed`
 
-### Step 5: Paywall
+### Step 5: Mock Paywall
 
-Purpose: connect the decision profile to a deeper Copymind experience without overstating current functionality.
+Purpose: convert the decision profile into a clear next-step offer without overstating current functionality.
+
+Motivation:
+
+- The user has just learned their decision pattern, blocker, and support style.
+- The paywall should offer a concrete continuation of that result: a personalized decision clarity plan.
+- The offer should feel like the next useful step after the result, not a generic upgrade or hidden AI promise.
 
 Content:
 
-- Title: "Continue your decision clarity setup"
-- Subtitle: "Use your decision profile as a starting point for deeper reflection, clearer choices, and pattern tracking over time."
-- CTA: "Continue my setup"
-- Next step message: "Next: choose your first decision clarity check-in."
+- Title: "Unlock your decision clarity plan"
+- Subtitle: "Get a structured plan based on your decision pattern, blocker, and support style."
+- CTA: "Buy"
+- Next step message: "Next: apply your profile to the next decision you are stuck on."
 
 Value bullets:
 
-- Track recurring decision patterns
-- Prepare to build a private decision history
-- Get structured clarity prompts
-- Compare choices against your values
-- Turn repeated decision loops into personalized guidance
+- Your top decision trap and how to spot it
+- A step-by-step clarity framework for your pattern
+- Prompts for the next decision you are stuck on
+- A saved profile you can revisit later
 
 UI:
 

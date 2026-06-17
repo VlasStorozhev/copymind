@@ -25,13 +25,19 @@ The assignment-facing acceptance checklist is kept separately:
 
 Use the checklist to verify that the implementation satisfies the original task requirements. Use the split product spec files for the detailed product and technical design.
 
-## MVP Priority
+## Canonical Flow
 
-The required assignment path remains:
+The product implements one canonical flow:
 
-1. Quiz start page.
-2. Email capture and user identification/authentication.
-3. Mock paywall with a "Buy" button.
-4. Private admin analytics dashboard.
+`Landing / Quiz Start -> Decision Assessment -> Email Capture/Auth -> Decision Profile Result -> Mock Paywall`
 
-Product-specific additions, such as the decision assessment and deterministic profile result, should not prevent the required MVP path from being completed and tested.
+This flow satisfies the assignment-required funnel while adding product-specific value through a short assessment and deterministic result page.
+
+Requirement coverage:
+
+1. `Landing / Quiz Start` covers the required quiz start page with title and CTA.
+2. `Email Capture/Auth` covers the required email capture page and user identification logic.
+3. `Mock Paywall` covers the required final paywall page with a "Buy" button.
+4. The private admin analytics dashboard covers the required analytics dashboard.
+
+Implementation should follow this single flow. The assignment requirements are verified by checking that the required pages and behaviors are present inside this canonical product flow.

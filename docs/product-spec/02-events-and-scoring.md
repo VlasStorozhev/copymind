@@ -25,7 +25,7 @@ Visits are source-attributed records, not funnel events. A new visit should be c
 Recommended event metadata:
 
 - `quiz_question_answered`: `{ "question_id": "...", "answer_id": "..." }`
-- `paywall_cta_clicked`: `{ "cta_label": "Continue my setup" }`
+- `paywall_cta_clicked`: `{ "cta_label": "Buy" }`
 - `email_submitted`: `{ "auth_provider": "supabase", "method": "magic_link", "auth_attempt_id": "..." }`
 - `magic_link_sent`: `{ "auth_provider": "supabase", "auth_attempt_id": "..." }`
 - `magic_link_verified`: `{ "auth_provider": "supabase", "auth_attempt_id": "..." }`
