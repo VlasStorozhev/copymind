@@ -1,17 +1,8 @@
 # Copymind Marketing Funnel MVP
 
-This repository contains the product specification and setup notes for the Copymind marketing funnel MVP and analytics dashboard.
+This repository contains the Copymind marketing funnel MVP and the private analytics dashboard.
 
-Current status:
-
-- Product specification is documented in `docs/product-spec/`.
-- Assignment acceptance checklist is documented in `docs/requirement-check-list.md`.
-- Supabase CLI project configuration exists in `supabase/config.toml`.
-- Next.js App Router scaffold is now in place at the repository root.
-- shadcn/ui has been initialized and the initial component set has been added.
-- Runtime, testing, and browser automation dependencies are installed.
-
-## Planned Stack
+## Stack
 
 - Next.js
 - TypeScript
@@ -21,44 +12,38 @@ Current status:
 - Supabase Postgres
 - Vercel
 
-## Canonical Product Flow
+## Product Flow
 
-The product implements one canonical flow:
+The canonical flow is:
 
-`Landing / Quiz Start -> Decision Assessment -> Email Capture/Auth -> /app with Decision Profile Result and Mock Paywall section`
+`Landing -> Quiz -> Email capture or login -> /auth/callback -> /app -> Mock paywall -> /dashboard`
 
-This flow satisfies the assignment-required funnel while adding product-specific assessment and result value.
+Returning users can use `/login` to receive a magic link and open `/app` without retaking the quiz.
+Authenticated users who finish `/quiz` skip email capture and return to `/app`.
 
-Returning users can use `/login` to receive a magic link and open `/app` without retaking the quiz. If the user has no saved decision profile, the app should route them back to the canonical flow.
+## Local Setup
 
-The assessment route is `/quiz`. It shows one question per screen and tracks progress. Anonymous users continue to email capture after completion; authenticated users skip email capture and return to `/app`.
+Run these commands from the repository root:
 
-Landing page states:
+```bash
+npm install
+cp .env.example .env.local
+supabase start
+supabase db reset
+npm run dev
+```
 
-- Anonymous users see `Start assessment` and `Already have a profile? Sign in`.
-- Authenticated users see `View my profile`, `Start new assessment`, and `Sign out`.
-- Authenticated admins also see secondary `Open dashboard` after server-side `admin_users` authorization.
+Supabase starts the local API, database, Studio, and Inbucket mail viewer.
 
-## Key Decisions
+Local URLs:
 
-- Supabase Auth magic links handle user creation, existing-user authentication, session creation, token expiry, and replay protection.
-- Email submission creates or finds the Supabase Auth user, but access is granted only after magic link verification.
-- Supabase Postgres stores visits, quiz responses, funnel events, user profiles, attribution fields, auth attempts, and dashboard admin access.
-- The private analytics dashboard is available only to authenticated users listed in the `admin_users` table.
-- Active admins should see a secondary `Open dashboard` button on authenticated landing and app pages.
-- Analytics are implemented in Supabase Postgres instead of a third-party analytics service for the MVP.
-- The mock paywall is a section on `/app` and does not integrate a real payment provider.
-- The generated landing hero image should be saved as `public/images/landing-hero.png` after the app is scaffolded.
-- The quiz includes a required non-scoring gender question. `/app` uses it to show `public/images/app-profile-man.png` or `public/images/app-profile-woman.png`.
-- If the user selects `Prefer not to say`, `/app` should use a neutral text-focused result layout without a gendered portrait.
-
-## Current Local Setup
-
-There is no runnable application yet. The current repository contains documentation, environment variable definitions, and Supabase CLI configuration. After the Next.js app is scaffolded, this section should be replaced with exact install, development, migration, and run commands.
+- App: `http://localhost:3000`
+- Supabase Studio: `http://127.0.0.1:54323`
+- Supabase Inbucket: `http://127.0.0.1:54324`
 
 ## Environment Variables
 
-Use `.env.example` as the required variable list.
+Copy `.env.example` to `.env.local` and fill in the required values:
 
 - `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
@@ -66,11 +51,18 @@ Use `.env.example` as the required variable list.
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_PROJECT_REF`
 
-Do not commit `.env.local`, `.vercel`, Supabase temporary metadata, or service-role secrets.
+E2E-only fixture variables:
 
-## Supabase Auth Redirects
+- `E2E_ADMIN_EMAIL`
+- `E2E_ADMIN_PASSWORD`
+- `E2E_REGULAR_EMAIL`
+- `E2E_REGULAR_PASSWORD`
 
-Magic links require environment-specific Supabase Auth URL configuration.
+Optional e2e override:
+
+- `PLAYWRIGHT_BASE_URL`
+
+## Supabase Auth Redirect URLs
 
 Local development:
 
@@ -79,43 +71,92 @@ Local development:
 
 Production:
 
-- Site URL: deployed Vercel application URL
+- Site URL: your deployed Vercel URL
 - Redirect URL: `${NEXT_PUBLIC_SITE_URL}/auth/callback`
 
-Preview deployments can be tested with magic links only after the exact preview URL is added to Supabase allowed Redirect URLs.
+Add the exact preview URL to Supabase allowed redirect URLs before testing magic links on a preview deployment.
 
-## Verification Scenarios
+## Dashboard Admin Setup
 
-Final implementation must support:
+Dashboard access is controlled by the `admin_users` table in Supabase.
 
-- Complete the canonical flow as a new user.
-- Complete the canonical flow again with the same email as an existing user.
-- Complete `/quiz` question by question, then continue to email capture as an anonymous user.
-- Verify that gender selection changes the profile image in `/app` without changing scoring logic.
-- Complete `/quiz` while already authenticated and confirm the app skips email capture and returns to `/app`.
-- Sign in through `/login` as an existing user and open the saved decision profile without retaking the quiz.
-- Open a magic link on a different device or browser and confirm it still restores the saved quiz result on `/app`.
-- Verify that the dashboard updates after anonymous acquisition runs and authenticated repeat quiz runs.
-- Verify that first-touch attribution remains stable.
-- Verify that last-touch attribution updates for returning users with a new source.
-- Verify that only active `admin_users` can access the dashboard.
-- Verify that active admins see a secondary `Open dashboard` button on authenticated landing and app pages.
-- Verify that the landing page shows the correct state for anonymous users, authenticated users, and authenticated admins.
+To grant admin access:
 
-Suggested demo data scenarios:
+1. Open Supabase Studio.
+2. Open Table Editor for `admin_users`.
+3. Insert or update a row for the admin email.
+4. Set `role` to `admin`.
+5. Set `is_active` to `true`.
+6. Set `user_id` when the Supabase Auth user already exists, or leave it null until the user signs in once.
 
-- New user from `/?utm_source=google`.
-- Returning same email from `/?utm_source=facebook`.
-- New user from direct traffic with no UTM.
-- Admin user listed in `admin_users`.
+The email should be stored in normalized form: trim whitespace and lowercase it.
 
-## Deployment Deliverables
+## Local Magic-Link Testing
 
-Final submission should include:
+1. Start Supabase with `supabase start`.
+2. Reset the local database with `supabase db reset`.
+3. Start the app with `npm run dev`.
+4. Open `http://localhost:3000/login` or submit the email capture form.
+5. Open Supabase Inbucket at `http://127.0.0.1:54324`.
+6. Open the message, click the magic link, and confirm it returns to `/auth/callback` and then `/app`.
 
-- GitHub repository URL
-- Deployed funnel URL
-- Deployed private dashboard URL
-- Dashboard credentials or admin access instructions
-- Local setup instructions after the application is scaffolded
-- Short explanation of key decisions and trade-offs
+If the email is for an admin account, make sure the matching row exists in `admin_users` before testing `/dashboard`.
+
+## Vercel Deployment
+
+Set the production environment variables in Vercel before deploying:
+
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_PROJECT_REF`
+
+Then run:
+
+```bash
+vercel pull --yes
+vercel build
+vercel deploy --prebuilt --prod
+```
+
+## Deployed URLs
+
+- Deployed funnel URL: https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app
+- Deployed dashboard URL: https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app/dashboard
+- Dashboard access instructions: sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`
+
+## Verification
+
+Run the local checks in this order:
+
+```bash
+npm run test
+npm run lint
+npm run build
+npm run e2e
+```
+
+Suggested manual scenarios:
+
+- New user from `/?utm_source=google`
+- Returning user from `/?utm_source=facebook`
+- New user from direct traffic
+- Returning login through `/login`
+- Admin dashboard access
+- Non-admin dashboard denial
+- Cross-device magic-link callback
+
+## Key Decisions
+
+- Supabase Auth handles passwordless login and session creation.
+- `admin_users` is the source of truth for dashboard access.
+- The dashboard and funnel share one Next.js app so the authenticated state stays consistent.
+- Analytics live in Supabase Postgres instead of a third-party analytics product for the MVP.
+- The mock paywall is intentionally non-billing and only captures intent.
+
+## Deployment Notes
+
+- Do not commit `.env.local`, `.vercel`, or Supabase temporary metadata.
+- Use the service-role key only on the server.
+- Record the final funnel and dashboard URLs here only after they are verified in production.
