@@ -7,7 +7,9 @@ Current status:
 - Product specification is documented in `docs/product-spec/`.
 - Assignment acceptance checklist is documented in `docs/requirement-check-list.md`.
 - Supabase CLI project configuration exists in `supabase/config.toml`.
-- Application implementation has not been scaffolded yet.
+- Next.js App Router scaffold is now in place at the repository root.
+- shadcn/ui has been initialized and the initial component set has been added.
+- Runtime, testing, and browser automation dependencies are installed.
 
 ## Planned Stack
 
