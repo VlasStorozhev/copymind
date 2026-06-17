@@ -7,7 +7,13 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
-    eventName?: 'landing_viewed' | 'start_clicked' | 'email_viewed'
+    eventName?:
+      | 'landing_viewed'
+      | 'start_clicked'
+      | 'email_viewed'
+      | 'result_viewed'
+      | 'paywall_viewed'
+      | 'paywall_cta_clicked'
     metadata?: Record<string, unknown>
     url?: string
     referrer?: string

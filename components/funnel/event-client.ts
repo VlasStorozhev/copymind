@@ -1,6 +1,12 @@
 "use client"
 
-export type FunnelVisitEventName = 'landing_viewed' | 'start_clicked' | 'email_viewed'
+export type FunnelVisitEventName =
+  | 'landing_viewed'
+  | 'start_clicked'
+  | 'email_viewed'
+  | 'result_viewed'
+  | 'paywall_viewed'
+  | 'paywall_cta_clicked'
 
 export async function sendFunnelVisitEvent(input: {
   eventName: FunnelVisitEventName
