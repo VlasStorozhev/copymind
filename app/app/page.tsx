@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { buttonVariants } from '@/components/ui/button'
-import { normalizeEmail } from '@/lib/auth/profiles'
+import { resolveAdminAccess } from '@/lib/auth/admin'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { createServerClient } from '@/lib/supabase/server'
 import { DecisionProfile } from '@/components/funnel/DecisionProfile'
@@ -20,27 +20,8 @@ export default async function AppPage() {
   }
 
   const adminClient = createAdminClient()
-
-  const { data: adminUser } = await adminClient
-    .from('admin_users')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .maybeSingle()
-
-  let isAdmin = !!adminUser
-
-  if (!isAdmin && user.email) {
-    const normalizedEmail = normalizeEmail(user.email)
-    const { data: adminEmailUser } = await adminClient
-      .from('admin_users')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    isAdmin = !!adminEmailUser
-  }
+  const adminAccess = await resolveAdminAccess()
+  const isAdmin = adminAccess.status === 'authorized'
 
   const { data: latestResponse } = await adminClient
     .from('quiz_responses')

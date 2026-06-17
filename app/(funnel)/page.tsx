@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { FunnelEventBeacon } from '@/components/funnel/event-beacon'
 import { LandingActions } from '@/components/funnel/landing-actions'
 import { Badge } from '@/components/ui/badge'
-import { createClient as createAdminClient } from '@/lib/supabase/admin'
+import { resolveAdminAccess } from '@/lib/auth/admin'
 import { createServerClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
@@ -14,18 +14,11 @@ export default async function LandingPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const adminClient = createAdminClient()
   let isAdmin = false
 
   if (user) {
-    const { data: adminUser } = await adminClient
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .maybeSingle()
-
-    isAdmin = !!adminUser
+    const adminAccess = await resolveAdminAccess()
+    isAdmin = adminAccess.status === 'authorized'
   }
 
   const authenticated = !!user
