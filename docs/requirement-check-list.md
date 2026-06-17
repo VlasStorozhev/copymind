@@ -57,9 +57,9 @@ Legend:
 
 | Requirement | Status | How |
 | --- | --- | --- |
-| Funnel application is deployed | [ ] | Provide public funnel URL. |
-| Analytics dashboard is deployed | [ ] | Provide deployed dashboard URL; access must require admin authentication. |
-| Links to both services are provided | [ ] | Include links in README / submission. |
+| Funnel application is deployed | [x] | Public funnel URL is `https://project-jodbb.vercel.app`. |
+| Analytics dashboard is deployed | [x] | Dashboard URL is `https://project-jodbb.vercel.app/dashboard`; unauthenticated access redirects to login. |
+| Links to both services are provided | [x] | README includes public funnel and dashboard URLs. |
 
 ## Testing Requirements
 
@@ -91,8 +91,8 @@ Legend:
 | Requirement | Status | How |
 | --- | --- | --- |
 | GitHub repository is provided | [ ] | Include repository URL. |
-| Deployed funnel link is provided | [ ] | Include funnel URL. |
-| Deployed dashboard link is provided | [ ] | Include dashboard URL; access requires admin authentication. |
+| Deployed funnel link is provided | [x] | README includes `https://project-jodbb.vercel.app`. |
+| Deployed dashboard link is provided | [x] | README includes `https://project-jodbb.vercel.app/dashboard`; access requires admin authentication. |
 | Dashboard access instructions are provided | [x] | Include `admin_users` access instructions in README. |
 | README includes local setup | [x] | README has install/run steps after the app is scaffolded. |
 | README includes verification steps | [x] | README explains new user, returning user, dashboard checks. |

@@ -116,15 +116,16 @@ Then run:
 
 ```bash
 vercel pull --yes
-vercel build
-vercel deploy --prebuilt --prod
+vercel deploy --prod
 ```
 
 ## Deployed URLs
 
-- Production deployment artifact: created for `https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app`
-- Current access status: Vercel protection/SSO is returning HTTP 401 for the public site and `/dashboard`, so public production acceptance is still pending
-- Dashboard access instructions: once public access is configured, sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`
+- Public funnel URL: `https://project-jodbb.vercel.app`
+- Public dashboard URL: `https://project-jodbb.vercel.app/dashboard`
+- Latest production deployment: `https://copymind-4ayc61uk8-vlas1414s-projects.vercel.app`
+- Current deployment-specific access status: Vercel protection/SSO returns HTTP 401 for `*.vlas1414s-projects.vercel.app` deployment URLs. Use the public alias above for browser testing.
+- Dashboard access instructions: sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`.
 
 ## Verification
 
@@ -159,4 +160,5 @@ Suggested manual scenarios:
 
 - Do not commit `.env.local`, `.vercel`, or Supabase temporary metadata.
 - Use the service-role key only on the server.
-- Record public funnel and dashboard URLs here only after Vercel protection/SSO is disabled or configured and Supabase Auth/admin access has been verified.
+- Project framework preset must be `Next.js`; a generic/Other Vercel project can deploy a build that returns only platform-level 404s.
+- Use source deployments with `vercel deploy --prod` for this project. Do not deploy stale `.vercel/output` artifacts with `--prebuilt`.
