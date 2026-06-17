@@ -124,7 +124,7 @@ const ANONYMOUS_STEPS = [
   'paywall_cta_clicked',
 ]
 
-const REPEAT_QUIZ_STEPS = ['quiz_started', 'quiz_completed', 'result_viewed', 'paywall_viewed']
+const REPEAT_QUIZ_STEPS = ['quiz_started', 'quiz_completed', 'result_viewed', 'paywall_viewed', 'paywall_cta_clicked']
 
 function divide(numerator: number, denominator: number) {
   if (denominator === 0) {

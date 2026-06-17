@@ -30,6 +30,7 @@ describe('buildDashboardSummary', () => {
       { step: 'quiz_completed', visits: 1, conversionRate: 1 },
       { step: 'result_viewed', visits: 1, conversionRate: 1 },
       { step: 'paywall_viewed', visits: 1, conversionRate: 1 },
+      { step: 'paywall_cta_clicked', visits: 1, conversionRate: 1 },
     ])
   })
 
@@ -67,11 +68,11 @@ describe('buildDashboardSummary', () => {
         magicLinksSent: 0,
         magicLinksVerified: 0,
         paywallViews: 1,
-        paywallClicks: 0,
+        paywallClicks: 1,
         quizCompletionRate: 1,
         emailSubmissionRate: 0,
         magicLinkVerificationRate: 0,
-        paywallClickRate: 0,
+        paywallClickRate: 1,
       },
       {
         source: 'google',
@@ -122,7 +123,7 @@ describe('buildDashboardSummary', () => {
         emailSubmissionRate: 0,
         magicLinkVerificationRate: 0,
         paywallViewRate: 1,
-        paywallClickRate: 0,
+        paywallClickRate: 1,
         topSource: 'facebook',
       },
     ])

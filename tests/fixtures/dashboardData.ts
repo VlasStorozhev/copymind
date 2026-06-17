@@ -251,6 +251,15 @@ export function buildDashboardFixture(): DashboardFixture {
         created_at: '2026-06-02T09:01:10.000Z',
       },
       {
+        id: 'event_facebook_paywall_clicked',
+        visit_id: 'visit_facebook_return',
+        event_type: 'paywall_cta_clicked',
+        user_id: 'user_google_repeat',
+        step: 'paywall',
+        metadata: {},
+        created_at: '2026-06-02T09:01:15.000Z',
+      },
+      {
         id: 'event_direct_landing',
         visit_id: 'visit_direct_drop',
         event_type: 'landing_viewed',
