@@ -122,9 +122,9 @@ vercel deploy --prebuilt --prod
 
 ## Deployed URLs
 
-- Deployed funnel URL: https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app
-- Deployed dashboard URL: https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app/dashboard
-- Dashboard access instructions: sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`
+- Production deployment artifact: created for `https://copymind-3ohcekrm3-vlas1414s-projects.vercel.app`
+- Current access status: Vercel protection/SSO is returning HTTP 401 for the public site and `/dashboard`, so public production acceptance is still pending
+- Dashboard access instructions: once public access is configured, sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`
 
 ## Verification
 
@@ -159,4 +159,4 @@ Suggested manual scenarios:
 
 - Do not commit `.env.local`, `.vercel`, or Supabase temporary metadata.
 - Use the service-role key only on the server.
-- Record the final funnel and dashboard URLs here only after they are verified in production.
+- Record public funnel and dashboard URLs here only after Vercel protection/SSO is disabled or configured and Supabase Auth/admin access has been verified.
