@@ -52,6 +52,8 @@ export type DashboardFixture = {
     last_touch_source: string | null
     last_touch_medium: string | null
     last_touch_campaign: string | null
+    product_interested_at: string | null
+    product_interest_source: string | null
     created_at: string
     updated_at: string
   }>
@@ -351,6 +353,8 @@ export function buildDashboardFixture(): DashboardFixture {
         last_touch_source: 'facebook',
         last_touch_medium: 'paid_social',
         last_touch_campaign: 'retargeting',
+        product_interested_at: '2026-06-02T09:01:15.000Z',
+        product_interest_source: 'mock_paywall_buy',
         created_at: '2026-06-02T09:01:00.000Z',
         updated_at: '2026-06-02T09:01:00.000Z',
       },

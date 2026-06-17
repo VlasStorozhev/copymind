@@ -13,7 +13,6 @@ function formatPercent(value: number | null) {
 
 export function DashboardPage({
   summary,
-  userEmail,
 }: {
   summary: DashboardSummary
   userEmail: string | null
@@ -23,14 +22,8 @@ export function DashboardPage({
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
-            <Badge variant="outline" className="w-fit border-border/70 bg-background/90 px-3 py-1">
-              Private analytics
-            </Badge>
             <div className="space-y-1">
               <h1 className="text-3xl font-semibold tracking-tight">Admin dashboard</h1>
-              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Server-rendered funnel, attribution, and product-intelligence summary for {userEmail ?? 'admin users'}.
-              </p>
             </div>
           </div>
         </section>
@@ -108,6 +101,8 @@ export function DashboardPage({
             'Last-touch medium',
             'Last-touch campaign',
             'Decision pattern',
+            'Product interest',
+            'Interested at',
             'First authenticated at',
             'Last seen at',
           ]}
@@ -120,41 +115,12 @@ export function DashboardPage({
             row.lastTouchMedium,
             row.lastTouchCampaign,
             row.decisionPattern,
+            row.productInterest,
+            row.productInterestedAt,
             row.firstAuthenticatedAt,
             row.lastSeenAt,
           ])}
         />
-
-        <div className="grid gap-6 xl:grid-cols-2">
-          <DashboardTableSection
-            title="Decision pattern breakdown"
-            description="Pattern-level conversion, source affinity, and completion quality."
-            columns={['Decision pattern', 'Users or visits', 'Email rate', 'Magic-link rate', 'Paywall view rate', 'Paywall click rate', 'Top source']}
-            rows={summary.patternBreakdown.map((row) => [
-              row.decisionPattern,
-              row.usersOrVisits,
-              formatPercent(row.emailSubmissionRate),
-              formatPercent(row.magicLinkVerificationRate),
-              formatPercent(row.paywallViewRate),
-              formatPercent(row.paywallClickRate),
-              row.topSource,
-            ])}
-          />
-
-          <DashboardTableSection
-            title="Source-by-pattern intelligence"
-          description="Most common pattern, blocker, and highest-converting pattern by source."
-          columns={['Source', 'Most common pattern', 'Most common blocker', 'Highest converting pattern']}
-          rows={summary.sourceByPattern.map((row) => [
-            <Badge key={row.source} variant="outline" className="border-border/70 bg-background/90">
-              {row.source}
-            </Badge>,
-            row.mostCommonDecisionPattern,
-            row.mostCommonBlocker,
-            row.highestConvertingPattern,
-            ])}
-          />
-        </div>
 
       </div>
     </main>

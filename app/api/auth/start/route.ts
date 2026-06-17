@@ -9,7 +9,7 @@ import { normalizeEmail } from '@/lib/auth/profiles'
 import { resolveQuizEmailCaptureStart } from '@/lib/funnel/auth-start'
 import { getOrCreateVisitorId } from '@/lib/analytics/visitor'
 import { getOrCreateVisit, recordFunnelEvent } from '@/lib/funnel/db'
-import { getPublicSiteUrl } from '@/lib/env'
+import { getAuthRedirectBaseUrl } from '@/lib/env'
 import { getGeneratedMagicLink, isEmailRateLimitError } from '@/lib/auth/magic-link'
 
 export async function POST(request: Request) {
@@ -105,7 +105,15 @@ export async function POST(request: Request) {
 
   const authAttemptId = randomUUID()
   const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString()
-  const redirectTo = `${getPublicSiteUrl()}/auth/callback?auth_attempt_id=${authAttemptId}`
+  const redirectTo = `${getAuthRedirectBaseUrl({ requestUrl: request.url })}/auth/callback`
+
+  cookieStore.set('auth_attempt_id', authAttemptId, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 30,
+  })
 
   const authAttempt =
     attemptType === 'quiz_email_capture'

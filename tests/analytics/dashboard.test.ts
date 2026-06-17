@@ -100,6 +100,8 @@ describe('buildDashboardSummary', () => {
         lastTouchMedium: 'paid_social',
         lastTouchCampaign: 'retargeting',
         decisionPattern: 'explorer',
+        productInterest: 'Interested',
+        productInterestedAt: '2026-06-02T09:01:15.000Z',
         firstAuthenticatedAt: '2026-06-02T09:01:00.000Z',
         lastSeenAt: '2026-06-02T09:01:00.000Z',
       },

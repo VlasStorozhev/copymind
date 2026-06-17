@@ -1,18 +1,22 @@
 "use client"
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { sendFunnelVisitEvent } from '@/components/funnel/event-client'
 
 const VALUE_POINTS = [
-  'Your top decision trap and how to spot it',
-  'A step-by-step clarity framework for your pattern',
-  'Prompts for the next decision you are stuck on',
-  'A saved decision profile you can revisit later',
+  'Trap',
+  'Framework',
+  'Prompts',
+  'Saved profile',
 ]
 
+const MONTHLY_PRICE = '$9'
+
 export function MockPaywall() {
+  const [checkoutRequested, setCheckoutRequested] = useState(false)
+
   useEffect(() => {
     void sendFunnelVisitEvent({
       eventName: 'paywall_viewed',
@@ -23,42 +27,57 @@ export function MockPaywall() {
   }, [])
 
   return (
-    <section className="space-y-4 rounded-2xl border border-border/70 bg-card/95 p-6 shadow-sm shadow-black/5">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold tracking-tight">Unlock your decision clarity plan</h2>
-        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-          Get a structured plan based on your decision pattern, blocker, and support style.
+    <section data-testid="paywall-card" className="grid gap-8 rounded-2xl border border-foreground/15 bg-[linear-gradient(135deg,rgba(17,17,17,0.04),rgba(255,255,255,0.96))] p-6 shadow-sm shadow-black/10 lg:grid-cols-[minmax(0,0.58fr)_minmax(320px,0.42fr)] lg:items-center lg:p-8">
+      <div data-testid="paywall-copy-column" className="space-y-5">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Decision clarity plan</p>
+          <h2 className="text-2xl font-semibold tracking-tight">Turn your profile into a monthly action plan</h2>
+          <p className="text-sm leading-6 text-muted-foreground">
+            Get structured prompts, decision reviews, and a saved framework for the choices you keep postponing.
+          </p>
+        </div>
+
+        <p className="text-sm leading-6 text-muted-foreground">
+          Next: apply your profile to the next decision you are stuck on.
         </p>
       </div>
 
-      <ul className="grid gap-2 text-sm text-foreground sm:grid-cols-2">
-        {VALUE_POINTS.map((point) => (
-          <li key={point} className="rounded-lg border border-border/70 bg-background/80 px-3 py-2 leading-5">
-            {point}
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-col gap-5 lg:items-end lg:text-right">
+        <div data-testid="paywall-price" className="text-left lg:text-right">
+          <div className="flex items-end gap-2 lg:justify-end">
+            <span className="text-6xl font-semibold tracking-tight">{MONTHLY_PRICE}</span>
+            <span className="pb-2 text-xl text-muted-foreground">/ month</span>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">Cancel anytime</p>
+        </div>
 
-      <p className="text-sm leading-6 text-muted-foreground">
-        Next: apply your profile to the next decision you are stuck on.
-      </p>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Button
-          type="button"
-          size="lg"
-          className="w-full sm:w-auto"
-          onClick={() => {
-            void sendFunnelVisitEvent({
-              eventName: 'paywall_cta_clicked',
-              metadata: {
-                placement: 'app_profile',
-              },
-            })
-          }}
-        >
-          Buy
-        </Button>
+        {checkoutRequested ? (
+          <div className="space-y-1 lg:max-w-xs">
+            <p className="text-sm font-medium">Checkout is not connected yet</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              We recorded your interest and will connect you.
+            </p>
+          </div>
+        ) : (
+          <div data-testid="paywall-action-row" className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <Button
+              type="button"
+              size="lg"
+              className="h-12 w-full px-10 text-base sm:w-auto"
+              onClick={() => {
+                setCheckoutRequested(true)
+                void sendFunnelVisitEvent({
+                  eventName: 'paywall_cta_clicked',
+                  metadata: {
+                    placement: 'app_profile',
+                  },
+                })
+              }}
+            >
+              Buy
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   )

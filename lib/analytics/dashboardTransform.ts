@@ -25,6 +25,8 @@ export type DashboardSummary = {
     lastTouchMedium: string | null
     lastTouchCampaign: string | null
     decisionPattern: string | null
+    productInterest: string
+    productInterestedAt: string | null
     firstAuthenticatedAt: string
     lastSeenAt: string
   }>
@@ -101,6 +103,8 @@ type UserProfileRow = {
   last_touch_source: string | null
   last_touch_medium: string | null
   last_touch_campaign: string | null
+  product_interested_at: string | null
+  product_interest_source: string | null
   created_at: string
   updated_at: string
 }
@@ -283,6 +287,8 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
         lastTouchMedium: profile.last_touch_medium,
         lastTouchCampaign: profile.last_touch_campaign,
         decisionPattern: latestResponse?.decision_pattern ?? null,
+        productInterest: profile.product_interested_at ? 'Interested' : '—',
+        productInterestedAt: profile.product_interested_at,
         firstAuthenticatedAt: profile.first_authenticated_at,
         lastSeenAt: profile.last_seen_at,
       }

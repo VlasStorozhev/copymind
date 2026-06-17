@@ -60,6 +60,8 @@ type UserProfileRow = {
   last_touch_source: string | null
   last_touch_medium: string | null
   last_touch_campaign: string | null
+  product_interested_at: string | null
+  product_interest_source: string | null
   created_at: string
   updated_at: string
 }
@@ -89,7 +91,7 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
     client
       .from('user_profiles')
       .select(
-        'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, created_at, updated_at',
+        'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, product_interested_at, product_interest_source, created_at, updated_at',
       ),
   ])
 

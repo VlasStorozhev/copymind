@@ -13,7 +13,7 @@ import { sendQuizEvent } from '@/components/funnel/event-client'
 
 type QuizAnswers = Record<string, string>
 
-export function QuizWizard({ authenticated }: { authenticated: boolean }) {
+export function QuizWizard({ authenticated }: { authenticated: boolean | null }) {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<QuizAnswers>({})
@@ -23,6 +23,10 @@ export function QuizWizard({ authenticated }: { authenticated: boolean }) {
   const progress = ((step + 1) / quizQuestions.length) * 100
 
   useEffect(() => {
+    if (authenticated === null) {
+      return
+    }
+
     void sendQuizEvent({
       action: 'start',
       metadata: { authenticated },

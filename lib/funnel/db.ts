@@ -138,3 +138,25 @@ export async function recordFunnelEvent(input: {
     metadata: input.metadata ?? {},
   })
 }
+
+export async function markUserProductInterest(input: {
+  client: SupabaseClient
+  userId: string
+  interestedAt?: string
+  source?: string
+}) {
+  const interestedAt = input.interestedAt ?? new Date().toISOString()
+  const updated = await input.client
+    .from('user_profiles')
+    .update({
+      product_interested_at: interestedAt,
+      product_interest_source: input.source ?? 'mock_paywall_buy',
+      updated_at: interestedAt,
+    })
+    .eq('user_id', input.userId)
+    .is('product_interested_at', null)
+    .select('user_id, product_interested_at, product_interest_source')
+    .maybeSingle()
+
+  return updated.data
+}

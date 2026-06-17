@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-import { recordFunnelEvent, getOrCreateVisit } from '@/lib/funnel/db'
+import { markUserProductInterest, recordFunnelEvent, getOrCreateVisit } from '@/lib/funnel/db'
 import { getOrCreateVisitorId } from '@/lib/analytics/visitor'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import { createServerClient } from '@/lib/supabase/server'
@@ -64,6 +64,15 @@ export async function POST(request: Request) {
         ? { source: visit.source, medium: visit.medium, campaign: visit.campaign }
         : body.metadata ?? {},
   })
+
+  const eventUserId = visit.user_id ?? user?.id ?? null
+  if (body.eventName === 'paywall_cta_clicked' && eventUserId) {
+    await markUserProductInterest({
+      client: adminClient,
+      userId: eventUserId,
+      source: 'mock_paywall_buy',
+    })
+  }
 
   return NextResponse.json({
     ok: true,

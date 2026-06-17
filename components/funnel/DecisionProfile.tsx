@@ -3,7 +3,6 @@ import type { Database } from '@/lib/database.types'
 import { FunnelEventBeacon } from '@/components/funnel/event-beacon'
 import { MockPaywall } from '@/components/funnel/MockPaywall'
 import { ProfileImage } from '@/components/funnel/ProfileImage'
-import { Badge } from '@/components/ui/badge'
 
 type QuizResponse = Database['public']['Tables']['quiz_responses']['Row']
 type DecisionProfileRow = Pick<
@@ -36,12 +35,16 @@ const SUPPORT_LABELS: Record<string, string> = {
   push_to_act: 'Push to act',
 }
 
+function sentenceCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
+
 function humanizePattern(value: string | null) {
   if (!value) {
     return 'Latest profile'
   }
 
-  return PATTERN_LABELS[value] ?? value.replaceAll('_', ' ')
+  return PATTERN_LABELS[value] ?? sentenceCase(value.replaceAll('_', ' '))
 }
 
 function humanizeIdentifier(value: string | null) {
@@ -49,7 +52,7 @@ function humanizeIdentifier(value: string | null) {
     return 'Not specified'
   }
 
-  return value.replaceAll('_', ' ')
+  return sentenceCase(value.replaceAll('_', ' '))
 }
 
 function humanizeSupportPreference(value: string | null) {
@@ -57,7 +60,7 @@ function humanizeSupportPreference(value: string | null) {
     return 'Not specified'
   }
 
-  return SUPPORT_LABELS[value] ?? value.replaceAll('_', ' ')
+  return SUPPORT_LABELS[value] ?? sentenceCase(value.replaceAll('_', ' '))
 }
 
 export function DecisionProfile({ profile }: { profile: DecisionProfileRow }) {
@@ -84,27 +87,6 @@ export function DecisionProfile({ profile }: { profile: DecisionProfileRow }) {
       >
         {hasPortrait ? <ProfileImage gender={profile.gender} /> : null}
 
-        <div className="space-y-6 rounded-2xl border border-border/70 bg-card/95 p-6 shadow-sm shadow-black/5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-1">
-              <Badge variant="outline" className="w-fit">
-                {humanizePattern(profile.decision_pattern)}
-              </Badge>
-              <p className="text-sm text-muted-foreground">Latest completed result</p>
-            </div>
-            <Badge variant={profile.confidence === 'high' ? 'default' : 'secondary'}>
-              {profile.confidence ? `${profile.confidence} confidence` : 'confidence unavailable'}
-            </Badge>
-          </div>
-
-          {!hasPortrait ? (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-background/80 p-5">
-              <p className="text-sm leading-6 text-muted-foreground">
-                No gendered portrait is shown for this profile.
-              </p>
-            </div>
-          ) : null}
-
           <dl className="grid gap-4 sm:grid-cols-2">
             <ProfileField label="Decision pattern" value={humanizePattern(profile.decision_pattern)} />
             <ProfileField
@@ -125,7 +107,6 @@ export function DecisionProfile({ profile }: { profile: DecisionProfileRow }) {
             />
             <ProfileField label="Confidence" value={humanizeIdentifier(profile.confidence)} />
           </dl>
-        </div>
       </div>
 
       <MockPaywall />
@@ -137,7 +118,7 @@ function ProfileField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border/70 bg-background/80 p-4">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="mt-2 text-sm leading-6 text-foreground">{value}</dd>
+      <dd className="mt-2 text-sm leading-6 text-foreground font-medium">{value}</dd>
     </div>
   )
 }

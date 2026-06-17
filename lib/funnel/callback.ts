@@ -37,6 +37,13 @@ export function resolveCallbackSource(input: {
   return input.attemptVisitSource ?? input.fallbackSource
 }
 
+export function resolveAuthAttemptIdFromCallback(input: {
+  queryAuthAttemptId?: string | null
+  cookieAuthAttemptId?: string | null
+}) {
+  return input.queryAuthAttemptId || input.cookieAuthAttemptId || null
+}
+
 function mapAttemptFailureReason(
   reason: 'missing' | 'expired' | 'failed' | 'verified' | 'email_mismatch' | 'superseded' | 'not_pending',
 ): MagicLinkFailureReason {

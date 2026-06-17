@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { createServerClient } from '@/lib/supabase/server'
 import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import {
+  resolveAuthAttemptIdFromCallback,
   resolveCallbackSource,
   resolveMagicLinkCallback,
   type MagicLinkFailureReason,
@@ -200,9 +201,14 @@ function buildProfileRepo(client: ReturnType<typeof createAdminClient>): UserPro
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams
   const code = searchParams.get('code')
-  const authAttemptId = searchParams.get('auth_attempt_id')
+  const cookieStore = await cookies()
+  const authAttemptId = resolveAuthAttemptIdFromCallback({
+    queryAuthAttemptId: searchParams.get('auth_attempt_id'),
+    cookieAuthAttemptId: cookieStore.get('auth_attempt_id')?.value ?? null,
+  })
 
   if (!code) {
+    cookieStore.delete('auth_attempt_id')
     return NextResponse.redirect(new URL('/login?auth_error=invalid', request.url))
   }
 
@@ -212,6 +218,7 @@ export async function GET(request: Request) {
   const authenticatedUser = session?.user ?? null
 
   if (exchangeError || !session || !authenticatedUser) {
+    cookieStore.delete('auth_attempt_id')
     return NextResponse.redirect(new URL('/login?auth_error=invalid', request.url))
   }
 
@@ -219,7 +226,6 @@ export async function GET(request: Request) {
   const authAttemptRepo = buildAuthAttemptRepo(adminClient)
   const profileRepo = buildProfileRepo(adminClient)
 
-  const cookieStore = await cookies()
   const visitorId = cookieStore.get('visitor_id')?.value ?? null
   const latestVisit = visitorId
     ? await adminClient
@@ -254,6 +260,7 @@ export async function GET(request: Request) {
       })
     }
 
+    cookieStore.delete('auth_attempt_id')
     return NextResponse.redirect(new URL('/login?auth_error=missing_context', request.url))
   }
 
@@ -317,6 +324,7 @@ export async function GET(request: Request) {
       })
     }
 
+    cookieStore.delete('auth_attempt_id')
     return NextResponse.redirect(new URL(redirectPath, request.url))
   }
 
@@ -341,5 +349,6 @@ export async function GET(request: Request) {
     })
   }
 
+  cookieStore.delete('auth_attempt_id')
   return NextResponse.redirect(new URL('/app', request.url))
 }

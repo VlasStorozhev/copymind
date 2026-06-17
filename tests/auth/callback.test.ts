@@ -8,7 +8,7 @@ import {
 } from '@/lib/auth/attempts'
 import type { UserProfileRecord, UserProfileRepository } from '@/lib/auth/profiles'
 import { resolveQuizEmailCaptureStart } from '@/lib/funnel/auth-start'
-import { resolveCallbackSource, resolveMagicLinkCallback } from '@/lib/funnel/callback'
+import { resolveAuthAttemptIdFromCallback, resolveCallbackSource, resolveMagicLinkCallback } from '@/lib/funnel/callback'
 
 function createAttemptRepositoryFixture() {
   const attempts: AuthAttemptRecord[] = []
@@ -138,6 +138,24 @@ describe('resolveQuizEmailCaptureStart', () => {
 })
 
 describe('resolveMagicLinkCallback', () => {
+  it('uses the auth attempt id cookie when the callback URL has no auth_attempt_id query', () => {
+    expect(
+      resolveAuthAttemptIdFromCallback({
+        queryAuthAttemptId: null,
+        cookieAuthAttemptId: 'attempt_from_cookie',
+      }),
+    ).toBe('attempt_from_cookie')
+  })
+
+  it('prefers the callback URL auth_attempt_id over the cookie fallback', () => {
+    expect(
+      resolveAuthAttemptIdFromCallback({
+        queryAuthAttemptId: 'attempt_from_query',
+        cookieAuthAttemptId: 'attempt_from_cookie',
+      }),
+    ).toBe('attempt_from_query')
+  })
+
   it('prefers attribution from the stored auth attempt visit over callback browser fallback', () => {
     expect(
       resolveCallbackSource({

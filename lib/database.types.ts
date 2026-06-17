@@ -244,6 +244,8 @@ export type Database = {
           last_touch_campaign: string | null
           last_touch_medium: string | null
           last_touch_source: string | null
+          product_interest_source: string | null
+          product_interested_at: string | null
           updated_at: string
           user_id: string
         }
@@ -260,6 +262,8 @@ export type Database = {
           last_touch_campaign?: string | null
           last_touch_medium?: string | null
           last_touch_source?: string | null
+          product_interest_source?: string | null
+          product_interested_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -276,6 +280,8 @@ export type Database = {
           last_touch_campaign?: string | null
           last_touch_medium?: string | null
           last_touch_source?: string | null
+          product_interest_source?: string | null
+          product_interested_at?: string | null
           updated_at?: string
           user_id?: string
         }
