@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
   createQuizEmailCaptureAttempt,
@@ -80,12 +80,6 @@ function createRepositoryFixture() {
 
       attempt.status = 'failed';
       return attempt;
-    },
-    async linkAttemptToVisit() {},
-    async linkAttemptToQuizResponse() {},
-    async upsertUserProfile() {},
-    async getProfileByUserId() {
-      return null;
     },
   };
 
