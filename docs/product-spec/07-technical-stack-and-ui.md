@@ -40,9 +40,20 @@ Recommended components:
 UI requirements:
 
 - Keep the funnel simple and fast to complete.
+- Use a generated bitmap hero image on the landing page instead of a purely decorative gradient or SVG abstraction.
+- The landing hero image should visually express decision clarity, branching choices, and a subtle AI Decision Twin presence.
+- Store the final landing hero asset at `public/images/landing-hero.png` after the app is scaffolded.
+- Store app profile imagery at `public/images/app-profile-man.png` and `public/images/app-profile-woman.png`.
+- In `/app`, select the displayed profile image from the latest completed `quiz_response.gender`.
+- For `prefer_not_to_say` or missing gender, use a neutral, text-focused result layout without a gendered portrait until a dedicated neutral asset exists.
 - Use polished, accessible form states.
 - Make primary actions visually clear.
 - Do not use decorative complexity that slows down the MVP.
+- Use small emoji accents where they make the product feel warmer or easier to scan.
+- Do not let emoji replace text labels, answer meaning, validation messages, or accessible names.
+- Keep emoji usage restrained: one emoji per quiz answer option or value bullet is enough.
+- Treat decorative emoji as `aria-hidden` in the implementation.
+- Avoid emoji in analytics dashboard metric labels, table cells, and admin controls; the dashboard should stay dense and work-focused.
 - Keep dashboard layout dense, readable, and admin-focused.
 - Use responsive layouts for mobile and desktop.
 
@@ -57,6 +68,8 @@ UI requirements:
 ## Deployment Conventions
 
 - Store public Supabase URL/key in Vercel environment variables with `NEXT_PUBLIC_` names.
+- Store the public application base URL in `NEXT_PUBLIC_SITE_URL`.
 - Store server-only Supabase keys only in server-side environment variables.
 - Do not commit `.env.local`, `.vercel`, or Supabase temporary metadata.
 - Manage dashboard admins in Supabase UI by editing the `admin_users` table.
+- Supabase Auth Site URL and allowed Redirect URLs must include the environment-specific `${NEXT_PUBLIC_SITE_URL}/auth/callback` before magic links are tested.

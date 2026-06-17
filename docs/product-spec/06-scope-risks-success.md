@@ -4,21 +4,30 @@ The initial MVP should include:
 
 - landing page;
 - structured multi-step decision assessment;
+- `/quiz` route for the question-by-question assessment;
+- required non-scoring gender question for `/app` profile image selection;
 - Next.js, TypeScript, Tailwind CSS, and shadcn/ui frontend implementation;
 - Supabase Auth magic link login;
 - Supabase magic link callback route;
+- magic link resend, recovery, and cross-device callback handling;
 - Supabase Postgres application data storage;
 - email capture with validation and "check your email" state;
 - pending auth context through `auth_attempts`;
 - deterministic decision profile generation;
+- gender-selected profile image on `/app` for Woman and Man selections;
+- neutral text-focused `/app` result layout for Prefer not to say or missing gender;
 - authenticated result page after magic link verification;
-- paywall page with tracked continuation intent;
+- returning-user login through `/login` without requiring a new quiz;
+- authenticated repeat quiz without requiring a new magic link;
+- authenticated app access through `/app`;
+- mock paywall section on `/app` with tracked continuation intent;
 - visitor tracking and Supabase Auth SSR/session handling;
 - Row Level Security policies for application tables;
 - first-touch and last-touch attribution for authenticated users;
 - repeat visit handling through Supabase Auth sessions;
+- admin-only dashboard entry from authenticated landing and app pages;
 - canonical event tracking with visit-level metric counting;
-- basic analytics dashboard covering funnel metrics, source attribution, and pattern breakdown;
+- basic analytics dashboard covering funnel metrics, source attribution, registered-user first-touch/last-touch attribution, and pattern breakdown;
 - seed data or clear demo scenarios;
 - README with architecture, trade-offs, and verification steps.
 
@@ -39,8 +48,7 @@ Launch-followup scope can include:
 
 - detailed quiz intelligence metrics;
 - answer-level conversion reporting;
-- protected user attribution table;
-- first-touch vs. last-touch user attribution views;
+- expanded user attribution views with visit counts, latest URLs, and latest referrers;
 - OAuth account access;
 - custom SMTP configuration for production email delivery;
 - optional current-decision collection after retention, access, and deletion rules are implemented.
@@ -109,6 +117,7 @@ The experience is successful if:
 - users understand the decision-making problem within the first screen;
 - the assessment feels focused and relevant;
 - the result page feels useful without overstating how the profile was produced;
+- gender selection changes only the `/app` profile image treatment and does not change scoring or dashboard segmentation;
 - Supabase Auth creates new users for new emails and authenticates existing users through magic links;
 - magic link callback links the correct pending quiz response to the authenticated `user_id`;
 - RLS policies prevent users from reading other users' profiles, quiz responses, visits, or raw events;

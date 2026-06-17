@@ -42,18 +42,18 @@ Primary funnel reporting should use visit-level deduplication unless a metric ex
 - `landing views`: unique visits with `landing_viewed`.
 - `assessment starts`: unique visits with `start_clicked`.
 - `quiz completions`: unique visits with `quiz_completed`.
-- `email submissions`: unique visits with successful `email_submitted`.
-- `magic links sent`: unique visits with `magic_link_sent`.
-- `magic links verified`: unique visits with `magic_link_verified`.
+- `email submissions`: unique anonymous acquisition visits with successful `email_submitted`.
+- `magic links sent`: unique anonymous acquisition visits with `magic_link_sent`.
+- `magic links verified`: unique anonymous acquisition visits with `magic_link_verified`.
 - `result views`: unique visits with `result_viewed`.
-- `paywall views`: unique visits with `paywall_viewed`.
+- `paywall views`: unique visits where the mock paywall section was displayed on `/app` and `paywall_viewed` was tracked.
 - `paywall CTA clicks`: unique visits with `paywall_cta_clicked`.
 - `new users`: unique Supabase Auth users first verified in the selected period.
 - `returning users`: unique Supabase Auth users that already existed before the selected visit.
 
-Conversion rates should use the previous funnel step as the denominator. For example, `quiz completed -> email submitted` is unique visits with both `quiz_completed` and `email_submitted` divided by unique visits with `quiz_completed`.
+Conversion rates should use the previous step in the relevant flow as the denominator. Email and magic-link steps apply only to anonymous acquisition visits, because authenticated users intentionally skip email capture when a valid session already exists.
 
-Authenticated funnel conversion should use this sequence:
+Anonymous acquisition conversion should use this sequence:
 
 - landing view -> start clicked
 - start clicked -> quiz completed
@@ -61,8 +61,17 @@ Authenticated funnel conversion should use this sequence:
 - email submitted -> magic link sent
 - magic link sent -> magic link verified
 - magic link verified -> result viewed
-- result viewed -> paywall viewed
+- result viewed -> mock paywall section viewed
 - paywall viewed -> paywall CTA clicked
+
+Authenticated repeat-quiz conversion should use this sequence:
+
+- quiz started -> quiz completed
+- quiz completed -> result viewed
+- result viewed -> mock paywall section viewed
+- paywall viewed -> paywall CTA clicked
+
+For authenticated repeat quiz reporting, `quiz_started` is the denominator for the first conversion step. Authenticated repeat quiz runs must not be counted as drop-offs at `email_submitted`, `magic_link_sent`, or `magic_link_verified`, because those steps are skipped by design.
 
 Raw event counts can be shown as a secondary diagnostic, but they should not be used as the primary conversion denominator because reloads and revisits can inflate page-view events.
 
@@ -137,6 +146,7 @@ The implementation should encode scoring against the canonical `question_id` and
 
 Derived profile fields:
 
+- `gender`: the selected answer from `profile_gender`; used only for profile image selection.
 - `decision_context`: the selected answer from the context question.
 - `decision_pattern`: the scored segment after tie-break.
 - `primary_blocker`: the selected answer from the blocker question.
@@ -158,3 +168,5 @@ Pattern output mapping:
 | `pressure_reactor` | The Pressure Reactor | Waiting until urgency creates forced clarity | Early-warning decision plan |
 
 The scoring rules should be simple and inspectable. This is important because the result should feel trustworthy and explainable.
+
+The `profile_gender` answer is required for the quiz but must be excluded from scoring and decision pattern analytics. It can be counted as a normal `quiz_question_answered` event, but it should not contribute points to any segment.

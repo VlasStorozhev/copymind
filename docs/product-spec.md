@@ -29,7 +29,7 @@ Use the checklist to verify that the implementation satisfies the original task 
 
 The product implements one canonical flow:
 
-`Landing / Quiz Start -> Decision Assessment -> Email Capture/Auth -> Decision Profile Result -> Mock Paywall`
+`Landing / Quiz Start -> Decision Assessment -> Email Capture/Auth -> /app with Decision Profile Result and Mock Paywall section`
 
 This flow satisfies the assignment-required funnel while adding product-specific value through a short assessment and deterministic result page.
 
@@ -37,7 +37,7 @@ Requirement coverage:
 
 1. `Landing / Quiz Start` covers the required quiz start page with title and CTA.
 2. `Email Capture/Auth` covers the required email capture page and user identification logic.
-3. `Mock Paywall` covers the required final paywall page with a "Buy" button.
+3. The `/app` mock paywall section covers the required final paywall with a "Buy" button and no real payment integration.
 4. The private admin analytics dashboard covers the required analytics dashboard.
 
 Implementation should follow this single flow. The assignment requirements are verified by checking that the required pages and behaviors are present inside this canonical product flow.

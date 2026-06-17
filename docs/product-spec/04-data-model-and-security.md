@@ -1,5 +1,7 @@
 ## Data Model
 
+Database migrations should implement the tables below in Supabase Postgres. Use `uuid` primary keys with `gen_random_uuid()`, `timestamptz` timestamps, and `jsonb` for structured metadata or answer payloads.
+
 ### user_profiles
 
 Application profile rows are keyed by the Supabase Auth user id.
@@ -24,6 +26,8 @@ Constraints and indexes:
 - `id` primary key
 - `user_id` unique
 - `email` unique
+- `user_id` references `auth.users(id)` on delete cascade
+- `email` should be stored normalized with `trim().toLowerCase()`
 - index on `email_verified_at`
 - index on `first_touch_source`
 - index on `last_touch_source`
@@ -44,6 +48,7 @@ Constraints and indexes:
 Constraints and indexes:
 
 - `id` primary key
+- `user_id` references `auth.users(id)` on delete set null
 - index on `visitor_id`
 - index on `user_id`
 - index on `source`
@@ -75,6 +80,10 @@ Allowed `status` values:
 Constraints and indexes:
 
 - `id` primary key
+- `visit_id` references `visits(id)` on delete cascade
+- `quiz_response_id` references `quiz_responses(id)` on delete cascade
+- `user_id` references `auth.users(id)` on delete set null
+- `status` check: `pending`, `verified`, `expired`, or `failed`
 - index on `visitor_id`
 - index on `visit_id`
 - index on `quiz_response_id`
@@ -104,6 +113,8 @@ Every funnel event must belong to a visit. Anonymous events should be linked thr
 Constraints and indexes:
 
 - `id` primary key
+- `visit_id` references `visits(id)` on delete cascade
+- `user_id` references `auth.users(id)` on delete set null
 - index on `visit_id`
 - index on `user_id`
 - index on `event_type`
@@ -116,6 +127,7 @@ Constraints and indexes:
 - `user_id`
 - `visit_id`
 - `answers`
+- `gender`
 - `current_decision`
 - `decision_context`
 - `decision_pattern`
@@ -143,11 +155,20 @@ Constraints and indexes:
 
 Stable `question_id` and `answer_id` values are required for dashboard aggregation. Labels can change for copy improvements without breaking analytics.
 
+`gender` should be copied from the required `profile_gender` answer. Allowed values are `woman`, `man`, and `prefer_not_to_say`. It is used only for selecting the profile image in `/app`; it must not affect scoring or access control.
+
+When multiple completed `quiz_responses` exist for the same user, `/app` should display the latest completed row by `completed_at desc`.
+
 `current_decision` should be nullable and disabled in the default MVP. If enabled later, it must follow the privacy requirements in the assessment section before any user text is stored.
 
 Constraints and indexes:
 
 - `id` primary key
+- `user_id` references `auth.users(id)` on delete set null
+- `visit_id` references `visits(id)` on delete cascade
+- `answers` stored as `jsonb`
+- `gender` check: `woman`, `man`, or `prefer_not_to_say`
+- `confidence` check: `high` or `low`
 - index on `visitor_id`
 - index on `user_id`
 - index on `visit_id`
@@ -171,7 +192,9 @@ Constraints and indexes:
 - `id` primary key
 - `user_id` references `auth.users(id)` and is unique when present
 - `email` unique
+- `email` should be stored normalized with `trim().toLowerCase()`
 - `role` defaults to `admin`
+- `role` check: `admin`
 - `is_active` defaults to `true`
 - index on `email`
 - index on `is_active`
@@ -202,3 +225,13 @@ Admin access:
 - Dashboard routes must check both a valid Supabase Auth session and admin authorization.
 - Admin records should be manageable from Supabase UI through the Table Editor.
 - The Supabase service-role key must never be exposed to browser code.
+
+Migration and RLS contract:
+
+- Enable RLS on `user_profiles`, `visits`, `quiz_responses`, `funnel_events`, `auth_attempts`, and `admin_users`.
+- Browser clients should not write directly to analytics or auth-context tables. Anonymous visit, quiz, event, and auth-attempt writes should go through trusted Next.js server routes.
+- Authenticated users can read only their own `user_profiles`, `visits`, and `quiz_responses` rows where `user_id = auth.uid()`.
+- Regular authenticated users should not read `funnel_events`, `auth_attempts`, or `admin_users`.
+- Dashboard reads should run through trusted server code after checking both Supabase Auth session validity and active `admin_users` membership.
+- Server routes that need cross-user analytics or admin checks may use the Supabase service-role key only on the server.
+- No service-role key, admin query, or raw dashboard dataset should be exposed to browser code without the server-side admin authorization check.
