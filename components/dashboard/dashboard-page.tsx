@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DashboardSummaryGrid } from '@/components/dashboard/dashboard-summary-grid'
 import { DashboardTableSection } from '@/components/dashboard/dashboard-table-section'
 import type { DashboardSummary } from '@/lib/analytics/dashboardTransform'
@@ -157,16 +156,6 @@ export function DashboardPage({
           />
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Dashboard scope</CardTitle>
-            <CardDescription>Gender is intentionally excluded from the MVP analytics dashboard.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            This dashboard is server-rendered and private. Only active admins with a valid Supabase Auth session can
-            load these metrics.
-          </CardContent>
-        </Card>
       </div>
     </main>
   )
