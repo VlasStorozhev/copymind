@@ -94,7 +94,7 @@ Legend:
 | Deployed funnel link is provided | [ ] | Include funnel URL. |
 | Deployed dashboard link is provided | [ ] | Include dashboard URL; access requires admin authentication. |
 | Dashboard access instructions are provided | [ ] | Include credentials and `admin_users` access instructions. |
-| README includes local setup | [ ] | README has install/run steps. |
+| README includes local setup | [ ] | README has install/run steps after the app is scaffolded; current README states that no runnable app exists yet. |
 | README includes verification steps | [ ] | README explains new user, returning user, dashboard checks. |
 | README explains key decisions/trade-offs | [ ] | Short explanation of stack and product choices. |
 

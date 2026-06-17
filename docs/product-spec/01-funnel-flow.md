@@ -281,12 +281,12 @@ Behavior:
 - Call Supabase passwordless email login with user creation enabled.
 - If email is new, Supabase Auth creates a new user record and sends a magic link.
 - If email already exists, Supabase Auth sends a magic link for the existing user.
-- Before sending the magic link, create an `auth_attempts` record that stores the pending `visitor_id`, `visit_id`, `quiz_response_id`, normalized email, desired redirect path, and expiry.
+- Before sending the magic link, create an `auth_attempts` record with `attempt_type = quiz_email_capture` that stores the pending `visitor_id`, `visit_id`, `quiz_response_id`, normalized email, desired redirect path, and expiry.
 - Call Supabase Auth with `emailRedirectTo` pointing to the application callback route and including the `auth_attempt_id` as non-secret application context.
 - After email submission, show a "Check your email" state. Do not show the decision profile yet.
 - The UI should use the same check-email message for new and existing emails so it does not reveal whether an account already exists.
 - The check-email state should support resend after the Supabase rate-limit window and explain that the link can expire.
-- After the user clicks the magic link and Supabase verifies the session, the callback route should resolve the pending `auth_attempts` record and associate its visit and quiz response with `user_id`.
+- After the user clicks the magic link and Supabase verifies the session, the callback route should resolve the pending `auth_attempts` record, associate the visit with `user_id`, and associate the quiz response with `user_id` when a quiz response is present.
 - If the verified user is new to the application profile table, create the profile row and assign first-touch attribution.
 - If the verified user already exists in the application profile table, update `last_seen_at` and last-touch attribution.
 - After successful verification and profile update, redirect to `/app`.
@@ -303,8 +303,10 @@ Callback and redirect rules:
 - Production Redirect URL should be `${NEXT_PUBLIC_SITE_URL}/auth/callback`.
 - Preview deployments can be tested with magic links only after the exact preview URL is added to Supabase allowed Redirect URLs.
 - Configure Supabase Site URL and allowed Redirect URLs before testing magic links in each environment.
-- The callback route should exchange or verify the Supabase magic link response, create the authenticated session, load the `auth_attempts` record by `auth_attempt_id`, verify that the attempt is pending and that `normalized_email` matches the authenticated Supabase user's email, link the stored `quiz_response`, then redirect to `/app`.
-- If the magic link is opened on a different device or browser than the original quiz session, the callback should still resolve the pending `auth_attempts` record, link the stored `quiz_response`, create the session on the new device, and redirect to `/app`.
+- The callback route should exchange or verify the Supabase magic link response, create the authenticated session, load the `auth_attempts` record by `auth_attempt_id`, verify that the attempt is pending and that `normalized_email` matches the authenticated Supabase user's email, then redirect to `/app`.
+- If `attempt_type = quiz_email_capture`, the callback must link the stored `quiz_response` to the authenticated user before redirecting.
+- If `attempt_type = returning_login`, the callback must not require a `quiz_response_id`; it should update profile last-touch context and redirect to `/app`.
+- If the magic link is opened on a different device or browser than the original quiz session, the callback should still resolve the pending `auth_attempts` record, link the stored `quiz_response` when one exists, create the session on the new device, and redirect to `/app`.
 - Authenticated routes must not rely on query-string user identifiers. The server should derive the user from the verified Supabase Auth session. `auth_attempt_id` can identify pending application context, but it must not authorize access by itself.
 - Magic links are one-time use and time-limited. The product should treat expired and replayed links as expected recovery cases, not fatal errors.
 
@@ -429,6 +431,7 @@ Behavior:
 
 - Use the same Supabase Auth magic link mechanism as the email capture step.
 - Do not require quiz answers before sending the magic link.
+- Before sending the magic link, create an `auth_attempts` record with `attempt_type = returning_login`, no `quiz_response_id`, the current `visitor_id` and `visit_id` when available, normalized email, desired redirect path `/app`, and expiry.
 - After successful magic link verification, redirect to `/app`.
 - If no saved decision profile exists for the authenticated user, show an empty state and a CTA to start the canonical flow.
 - Admin users can use `/login` as their authentication entry point before opening `/dashboard`.

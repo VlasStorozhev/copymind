@@ -56,12 +56,13 @@ Constraints and indexes:
 
 ### auth_attempts
 
-`auth_attempts` preserves the relationship between the anonymous quiz completion and the later Supabase Auth callback. It stores application context only; Supabase owns the magic link token, token expiry, one-time use, and session creation.
+`auth_attempts` preserves application context for Supabase Auth callbacks. It supports both anonymous quiz email capture and returning-user login without a new quiz. Supabase owns the magic link token, token expiry, one-time use, and session creation.
 
 - `id`
 - `visitor_id`
 - `visit_id`
 - `quiz_response_id`
+- `attempt_type`
 - `user_id`
 - `normalized_email`
 - `status`
@@ -77,11 +78,19 @@ Allowed `status` values:
 - `expired`
 - `failed`
 
+Allowed `attempt_type` values:
+
+- `quiz_email_capture`
+- `returning_login`
+
 Constraints and indexes:
 
 - `id` primary key
 - `visit_id` references `visits(id)` on delete cascade
-- `quiz_response_id` references `quiz_responses(id)` on delete cascade
+- `quiz_response_id` nullable; references `quiz_responses(id)` on delete cascade
+- `attempt_type` check: `quiz_email_capture` or `returning_login`
+- `quiz_response_id` must be present when `attempt_type = quiz_email_capture`
+- `quiz_response_id` must be null when `attempt_type = returning_login`
 - `user_id` references `auth.users(id)` on delete set null
 - `status` check: `pending`, `verified`, `expired`, or `failed`
 - index on `visitor_id`
@@ -94,9 +103,11 @@ Constraints and indexes:
 
 Resend behavior:
 
-- Multiple auth attempts can exist for the same `quiz_response_id`.
-- Only the latest non-expired pending attempt should be used for callback resolution.
-- When a later attempt is verified, older pending attempts for the same `quiz_response_id` should be marked `expired` or ignored for callback matching.
+- Multiple quiz email-capture attempts can exist for the same `quiz_response_id`.
+- Multiple returning-login attempts can exist for the same normalized email.
+- Only the latest non-expired pending attempt for the same context should be used for callback resolution.
+- When a later quiz email-capture attempt is verified, older pending attempts for the same `quiz_response_id` should be marked `expired` or ignored for callback matching.
+- When a later returning-login attempt is verified, older pending returning-login attempts for the same normalized email should be marked `expired` or ignored for callback matching.
 
 ### funnel_events
 

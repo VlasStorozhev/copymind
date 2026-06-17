@@ -18,6 +18,7 @@ The initial MVP should include:
 - neutral text-focused `/app` result layout for Prefer not to say or missing gender;
 - authenticated result page after magic link verification;
 - returning-user login through `/login` without requiring a new quiz;
+- returning-user login auth attempts without requiring a `quiz_response_id`;
 - authenticated repeat quiz without requiring a new magic link;
 - authenticated app access through `/app`;
 - mock paywall section on `/app` with tracked continuation intent;
@@ -119,7 +120,7 @@ The experience is successful if:
 - the result page feels useful without overstating how the profile was produced;
 - gender selection changes only the `/app` profile image treatment and does not change scoring or dashboard segmentation;
 - Supabase Auth creates new users for new emails and authenticates existing users through magic links;
-- magic link callback links the correct pending quiz response to the authenticated `user_id`;
+- magic link callback links the correct pending quiz response to the authenticated `user_id` when the attempt came from email capture, and supports returning login without a quiz response;
 - RLS policies prevent users from reading other users' profiles, quiz responses, visits, or raw events;
 - first-touch attribution remains stable;
 - last-touch attribution updates for authenticated repeat visits;

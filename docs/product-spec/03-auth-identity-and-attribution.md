@@ -45,7 +45,8 @@ Identity rules:
 - Server-side protected routes must derive the user from the verified Supabase Auth session, not from query params, local storage, or client-submitted `user_id`.
 - Server code should avoid trusting raw session cookies for authorization. It should use Supabase server-client verification methods such as `getUser()` or validated claims according to the framework setup.
 - The magic link callback route should create or refresh the Supabase Auth session before accessing application tables.
-- Magic links opened on a different device or browser should still resolve the pending `auth_attempts` record, link the stored quiz response, and redirect to `/app`.
+- Magic links opened on a different device or browser should still resolve the pending `auth_attempts` record, link the stored quiz response when one exists, and redirect to `/app`.
+- Returning-user login attempts from `/login` should use `attempt_type = returning_login` and must not require a quiz response.
 - `/app` must derive the saved decision profile from the authenticated Supabase Auth user, not from an email or user id in the URL.
 - `/dashboard` access and any landing or app-page dashboard CTA must require an active `admin_users` row checked in trusted server code.
 - Logout should clear the Supabase Auth session and leave anonymous `visitor_id` tracking intact for future funnel attribution.
