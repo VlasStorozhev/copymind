@@ -10,6 +10,7 @@ import { resolveQuizEmailCaptureStart } from '@/lib/funnel/auth-start'
 import { getOrCreateVisitorId } from '@/lib/analytics/visitor'
 import { getOrCreateVisit, recordFunnelEvent } from '@/lib/funnel/db'
 import { getPublicSiteUrl } from '@/lib/env'
+import { getGeneratedMagicLink, isEmailRateLimitError } from '@/lib/auth/magic-link'
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
@@ -240,6 +241,39 @@ export async function POST(request: Request) {
   })
 
   if (error) {
+    if (isEmailRateLimitError(error.message)) {
+      const { data: generatedLink, error: generateLinkError } = await adminClient.auth.admin.generateLink({
+        type: 'magiclink',
+        email,
+        options: {
+          redirectTo,
+        },
+      })
+      const manualLink = generatedLink ? getGeneratedMagicLink(generatedLink) : null
+
+      if (manualLink && !generateLinkError) {
+        await recordFunnelEvent({
+          client: adminClient,
+          visitId: visit.id,
+          eventName: 'magic_link_sent',
+          userId: user?.id ?? null,
+          metadata: {
+            auth_provider: 'supabase',
+            auth_attempt_id: authAttempt.id,
+            delivery_method: 'manual_link_fallback',
+            fallback_reason: 'email_rate_limited',
+          },
+        })
+
+        return NextResponse.json({
+          ok: true,
+          auth_attempt_id: authAttempt.id,
+          manual_link: manualLink,
+          delivery: 'manual_link_fallback',
+        })
+      }
+    }
+
     await adminClient
       .from('auth_attempts')
       .update({ status: 'failed' })

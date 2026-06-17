@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, LoaderCircle, Mail, RotateCcw, SquarePen } from 'lucide-react'
+import { CheckCircle2, ExternalLink, LoaderCircle, Mail, RotateCcw, SquarePen } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -41,6 +41,7 @@ export function AuthStartForm({
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(recoveryMessage ?? null)
   const [authAttemptId, setAuthAttemptId] = useState<string | null>(null)
+  const [manualLink, setManualLink] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const pageViewMetadataKey = JSON.stringify(pageViewMetadata ?? {})
   const pageViewMetadataStable = useMemo(
@@ -81,9 +82,18 @@ export function AuthStartForm({
       {status === 'sent' ? (
         <Alert>
           <CheckCircle2 className="size-4" />
-          <AlertTitle>Check your email</AlertTitle>
+          <AlertTitle>{manualLink ? 'Secure link ready' : 'Check your email'}</AlertTitle>
           <AlertDescription>
-            We sent a secure sign-in link to <span className="font-medium text-foreground">{email}</span>.
+            {manualLink ? (
+              <>
+                Email sending is temporarily rate-limited. Open this one-time secure link to continue with your
+                decision profile.
+              </>
+            ) : (
+              <>
+                We sent a secure sign-in link to <span className="font-medium text-foreground">{email}</span>.
+              </>
+            )}
           </AlertDescription>
         </Alert>
       ) : null}
@@ -100,6 +110,7 @@ export function AuthStartForm({
 
           setStatus('sending')
           setErrorMessage(null)
+          setManualLink(null)
 
           startTransition(async () => {
             const response = await sendAuthStartEvent({
@@ -115,7 +126,7 @@ export function AuthStartForm({
             }
 
             const payload = (await response.json().catch(() => null)) as
-              | { auth_attempt_id?: string; error?: string; reason?: string }
+              | { auth_attempt_id?: string; error?: string; reason?: string; manual_link?: string }
               | null
 
             if (!response.ok) {
@@ -129,6 +140,7 @@ export function AuthStartForm({
             }
 
             setAuthAttemptId(payload?.auth_attempt_id ?? null)
+            setManualLink(payload?.manual_link ?? null)
             setStatus('sent')
           })
         }}
@@ -152,6 +164,7 @@ export function AuthStartForm({
                 setStatus('idle')
                 setErrorMessage(recoveryMessage ?? null)
               }
+              setManualLink(null)
             }}
           />
         </div>
@@ -172,10 +185,26 @@ export function AuthStartForm({
                 setStatus('idle')
                 setErrorMessage(null)
                 setAuthAttemptId(null)
+                setManualLink(null)
               }}
             >
               <SquarePen className="size-4" />
               Change email
+            </Button>
+          ) : null}
+
+          {manualLink ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="gap-2"
+              onClick={() => {
+                window.location.href = manualLink
+              }}
+            >
+              <ExternalLink className="size-4" />
+              Open secure link
             </Button>
           ) : null}
 
