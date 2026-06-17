@@ -2,6 +2,8 @@
 
 MVP guardrail: the assignment-required path is `Quiz Start Page -> Email Capture/Auth -> Mock Paywall`. The decision assessment and result page are product-specific additions. They should not prevent the required 3-step MVP path from being completed, tested, and demonstrated.
 
+UI guardrail: implement funnel UI with Tailwind CSS and shadcn/ui components. Use `Button` for primary CTAs, `Input` for email capture, form primitives for validation, and `Alert` for magic-link and recovery states.
+
 ### Step 1: Landing Page
 
 Purpose: create a focused, emotionally relevant entry point.
@@ -129,6 +131,13 @@ Content:
 - Field: email
 - CTA: "Send secure link"
 
+UI:
+
+- Use shadcn/ui `Input` for email.
+- Use shadcn/ui `Button` for submit and resend.
+- Use form validation messaging for invalid email states.
+- Use shadcn/ui `Alert` for "Check your email", expired link, invalid link, and resend states.
+
 Behavior:
 
 - Normalize email with `trim().toLowerCase()`.
@@ -221,6 +230,12 @@ Value bullets:
 - Get structured clarity prompts
 - Compare choices against your values
 - Turn repeated decision loops into personalized guidance
+
+UI:
+
+- Use shadcn/ui `Card` only where the paywall content needs a clear framed surface.
+- Use shadcn/ui `Button` for the "Buy" CTA.
+- The Buy button should look like a primary action but must not trigger a real payment.
 
 Tracking:
 

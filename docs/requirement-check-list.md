@@ -46,7 +46,7 @@ Legend:
 
 | Requirement | Status | How |
 | --- | --- | --- |
-| Stack decision is documented | [ ] | Planned stack: Supabase Auth + Supabase Postgres + hosted app. |
+| Stack decision is documented | [ ] | Planned stack: Next.js + TypeScript + Tailwind + shadcn/ui + Supabase + Vercel. |
 | Solution works end-to-end | [ ] | User can complete funnel and see data in dashboard. |
 | Architecture decisions are documented | [ ] | README explains key decisions and trade-offs. |
 

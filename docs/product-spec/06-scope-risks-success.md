@@ -4,6 +4,7 @@ The initial MVP should include:
 
 - landing page;
 - structured multi-step decision assessment;
+- Next.js, TypeScript, Tailwind CSS, and shadcn/ui frontend implementation;
 - Supabase Auth magic link login;
 - Supabase magic link callback route;
 - Supabase Postgres application data storage;
@@ -68,6 +69,10 @@ The initial profile is deterministic and transparent. This avoids overstating pr
 ### Single App vs. Separate Services
 
 A single application can handle the funnel, dashboard, event tracking, and attribution model. A separate backend or analytics pipeline would add complexity without improving the initial product experience.
+
+### Next.js + shadcn/ui vs. Custom UI
+
+Next.js, TypeScript, Tailwind CSS, and shadcn/ui should be used for the MVP. This keeps implementation fast while providing polished, accessible UI primitives for forms, buttons, metric cards, tables, loading states, and admin dashboard controls.
 
 ### Basic Dashboard vs. BI Tooling
 

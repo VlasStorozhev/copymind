@@ -15,6 +15,7 @@ The full specification is split into focused files so implementation agents can 
 | Data model and security | [04-data-model-and-security.md](product-spec/04-data-model-and-security.md) | Creating Supabase Postgres tables, indexes, and access rules. |
 | Analytics dashboard | [05-analytics-dashboard.md](product-spec/05-analytics-dashboard.md) | Building the private admin dashboard and dashboard metrics. |
 | Scope, risks, success | [06-scope-risks-success.md](product-spec/06-scope-risks-success.md) | Checking MVP scope, launch-followup scope, risks, and success criteria. |
+| Technical stack and UI | [07-technical-stack-and-ui.md](product-spec/07-technical-stack-and-ui.md) | Applying the fixed stack and shadcn/ui component conventions. |
 
 ## Requirement Checklist
 

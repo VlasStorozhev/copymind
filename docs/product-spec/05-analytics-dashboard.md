@@ -6,6 +6,16 @@ The dashboard should answer three questions:
 2. Which sources bring valuable users?
 3. Which decision patterns are most common and most likely to convert?
 
+UI:
+
+- Build the dashboard with Tailwind CSS and shadcn/ui.
+- Use `Card` for top-level metric summaries.
+- Use `Table` for funnel steps, source breakdown, and attribution views.
+- Use `Tabs` only if the dashboard needs clear separation between funnel, source, and product intelligence sections.
+- Use `Badge` for source, status, and user state labels.
+- Use `Skeleton` or loading states while dashboard data loads.
+- Keep the dashboard private, admin-focused, dense, and easy to scan.
+
 ### Funnel Metrics
 
 Core metrics:
