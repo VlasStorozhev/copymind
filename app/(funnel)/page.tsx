@@ -66,7 +66,7 @@ export default async function LandingPage() {
             <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/80 shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
               <div className="relative aspect-[16/10] w-full">
                 <Image
-                  src="/images/landing-hero.png"
+                  src="/images/landing-hero.jpg"
                   alt="Illustration of branching decision paths and a subtle AI twin presence"
                   fill
                   priority
