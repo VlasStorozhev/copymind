@@ -5,13 +5,6 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { sendFunnelVisitEvent } from '@/components/funnel/event-client'
 
-const VALUE_POINTS = [
-  'Trap',
-  'Framework',
-  'Prompts',
-  'Saved profile',
-]
-
 const MONTHLY_PRICE = '$9'
 
 export function MockPaywall() {

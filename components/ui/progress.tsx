@@ -8,11 +8,15 @@ function Progress({
   className,
   children,
   value,
+  getAriaValueText,
   ...props
 }: ProgressPrimitive.Root.Props) {
   return (
     <ProgressPrimitive.Root
       value={value}
+      getAriaValueText={getAriaValueText ?? ((_, currentValue) => (
+        currentValue == null ? "indeterminate progress" : `${Math.round(currentValue)}%`
+      ))}
       data-slot="progress"
       className={cn("flex flex-wrap gap-3", className)}
       {...props}

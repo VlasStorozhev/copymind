@@ -40,7 +40,7 @@ export function QuizWizard({ authenticated }: { authenticated: boolean | null })
   }
 
   return (
-    <Card className="mx-auto w-full max-w-xl border-border/60 bg-card/95 shadow-sm shadow-black/5">
+    <Card className="mx-auto mb-24 w-full max-w-xl border-border/60 bg-card/95 shadow-sm shadow-black/5 sm:mb-[300px]">
       <CardHeader className="space-y-3 border-b border-border/60 pb-4">
         <div className="flex items-center justify-between gap-4">
           <CardTitle className="text-lg">Decision profile</CardTitle>
@@ -53,7 +53,7 @@ export function QuizWizard({ authenticated }: { authenticated: boolean | null })
           Answer one question at a time. You can move back before you submit.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 pt-6">
+      <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="space-y-2">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

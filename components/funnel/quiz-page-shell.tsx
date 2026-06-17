@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 
 import { QuizWizard } from '@/components/funnel/quiz-wizard'
-import { Badge } from '@/components/ui/badge'
 
 type SessionSummary = {
   authenticated: boolean
