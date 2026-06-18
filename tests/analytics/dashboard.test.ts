@@ -12,22 +12,16 @@ describe('buildDashboardSummary', () => {
     userProfiles: fixture.userProfiles,
   })
 
-  it('builds anonymous acquisition and repeat-quiz conversion tables', () => {
+  it('builds anonymous acquisition and authenticated product conversion tables', () => {
     expect(summary.anonymousConversion).toEqual([
       { step: 'landing_viewed', visits: 2, conversionRate: 1 },
       { step: 'start_clicked', visits: 2, conversionRate: 1 },
       { step: 'quiz_completed', visits: 1, conversionRate: 0.5 },
       { step: 'email_submitted', visits: 1, conversionRate: 0.5 },
       { step: 'magic_link_sent', visits: 1, conversionRate: 0.5 },
-      { step: 'magic_link_verified', visits: 1, conversionRate: 0.5 },
-      { step: 'result_viewed', visits: 1, conversionRate: 0.5 },
-      { step: 'paywall_viewed', visits: 1, conversionRate: 0.5 },
-      { step: 'paywall_cta_clicked', visits: 1, conversionRate: 0.5 },
     ])
 
-    expect(summary.repeatQuizConversion).toEqual([
-      { step: 'quiz_started', visits: 1, conversionRate: 1 },
-      { step: 'quiz_completed', visits: 1, conversionRate: 1 },
+    expect(summary.authenticatedProductConversion).toEqual([
       { step: 'result_viewed', visits: 1, conversionRate: 1 },
       { step: 'paywall_viewed', visits: 1, conversionRate: 1 },
       { step: 'paywall_cta_clicked', visits: 1, conversionRate: 1 },

@@ -1,7 +1,7 @@
 export type DashboardSummary = {
   summaryMetrics: Array<{ label: string; value: number; description?: string }>
   anonymousConversion: Array<{ step: string; visits: number; conversionRate: number | null }>
-  repeatQuizConversion: Array<{ step: string; visits: number; conversionRate: number | null }>
+  authenticatedProductConversion: Array<{ step: string; visits: number; conversionRate: number | null }>
   sourceBreakdown: Array<{
     source: string
     visits: number
@@ -122,13 +122,9 @@ const ANONYMOUS_STEPS = [
   'quiz_completed',
   'email_submitted',
   'magic_link_sent',
-  'magic_link_verified',
-  'result_viewed',
-  'paywall_viewed',
-  'paywall_cta_clicked',
 ]
 
-const REPEAT_QUIZ_STEPS = ['quiz_started', 'quiz_completed', 'result_viewed', 'paywall_viewed', 'paywall_cta_clicked']
+const AUTHENTICATED_PRODUCT_STEPS = ['result_viewed', 'paywall_viewed', 'paywall_cta_clicked']
 
 function divide(numerator: number, denominator: number) {
   if (denominator === 0) {
@@ -424,11 +420,11 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       visitFilter: (visit) => !visit.user_id,
       steps: ANONYMOUS_STEPS,
     }),
-    repeatQuizConversion: buildConversionRows({
+    authenticatedProductConversion: buildConversionRows({
       visits: rows.visits,
       eventMap,
       visitFilter: (visit) => !!visit.user_id,
-      steps: REPEAT_QUIZ_STEPS,
+      steps: AUTHENTICATED_PRODUCT_STEPS,
     }),
     sourceBreakdown,
     registeredUsers,

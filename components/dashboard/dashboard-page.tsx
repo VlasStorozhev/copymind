@@ -33,7 +33,7 @@ export function DashboardPage({
         <div className="grid gap-6 xl:grid-cols-2">
           <DashboardTableSection
             title="Anonymous acquisition conversion"
-            description="Anonymous visitors, including email capture and magic-link steps."
+            description="Anonymous visitors from landing to magic-link request."
             columns={['Step', 'Visits', 'Conversion']}
             rows={summary.anonymousConversion.map((row) => [
               row.step,
@@ -43,10 +43,10 @@ export function DashboardPage({
           />
 
           <DashboardTableSection
-            title="Authenticated repeat-quiz conversion"
-            description="Returning users who are already authenticated skip the email and magic-link steps."
+            title="Authenticated product conversion"
+            description="Signed-in users from result view to Buy intent."
             columns={['Step', 'Visits', 'Conversion']}
-            rows={summary.repeatQuizConversion.map((row) => [
+            rows={summary.authenticatedProductConversion.map((row) => [
               row.step,
               row.visits,
               formatPercent(row.conversionRate),

@@ -38,7 +38,7 @@ describe('DashboardPage', () => {
 
     expect(screen.getByText('Total visits')).toBeInTheDocument()
     expect(screen.getByText('Anonymous acquisition conversion')).toBeInTheDocument()
-    expect(screen.getByText('Authenticated repeat-quiz conversion')).toBeInTheDocument()
+    expect(screen.getByText('Authenticated product conversion')).toBeInTheDocument()
     expect(screen.getByText('Source breakdown')).toBeInTheDocument()
     expect(screen.getByText('Registered-user attribution')).toBeInTheDocument()
     expect(screen.getByText('Product interest')).toBeInTheDocument()
@@ -46,5 +46,6 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Interested')).toBeInTheDocument()
     expect(screen.queryByText('Decision pattern breakdown')).not.toBeInTheDocument()
     expect(screen.queryByText('Source-by-pattern intelligence')).not.toBeInTheDocument()
+    expect(screen.queryByText('Authenticated repeat-quiz conversion')).not.toBeInTheDocument()
   })
 })

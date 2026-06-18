@@ -50,7 +50,7 @@ describe('instant navigation shells', () => {
 
     render(<QuizPageShell />)
 
-    expect(screen.getByText('Decision profile assessment')).toBeInTheDocument()
+    expect(screen.queryByText('Decision profile assessment')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Who are you creating this profile for?' })).toBeInTheDocument()
   })
 
@@ -171,7 +171,7 @@ describe('instant navigation shells', () => {
 
     expect(screen.queryByRole('button', { name: 'Buy' })).not.toBeInTheDocument()
     expect(screen.getByText('Checkout is not connected yet')).toBeInTheDocument()
-    expect(screen.getByText('We recorded your interest and will connect payment next.')).toBeInTheDocument()
+    expect(screen.getByText('We recorded your interest and will connect you.')).toBeInTheDocument()
   })
 
   it('shows the paywall price once in a clean commerce column with a prominent right CTA', () => {
@@ -184,7 +184,7 @@ describe('instant navigation shells', () => {
     expect(screen.getByRole('button', { name: 'Buy' })).toBeInTheDocument()
     expect(screen.getByTestId('paywall-card')).toHaveClass('lg:grid-cols-[minmax(0,0.58fr)_minmax(320px,0.42fr)]')
     expect(screen.getByTestId('paywall-copy-column')).not.toHaveClass('lg:max-w-[50%]')
-    expect(screen.getByText('Prompts')).toBeInTheDocument()
+    expect(screen.getByText(/structured prompts/i)).toBeInTheDocument()
     expect(screen.queryByText('Next-decision prompts')).not.toBeInTheDocument()
     expect(screen.getByTestId('paywall-price')).not.toHaveClass('border')
     expect(screen.getByTestId('paywall-price')).not.toHaveClass('bg-background/90')
