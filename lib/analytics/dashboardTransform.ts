@@ -253,15 +253,27 @@ function getUniqueEventActors(params: {
   return actors.size
 }
 
+function countRepeatQuizUsers(quizResponses: QuizResponseRow[]) {
+  const completedCountsByUser = new Map<string, number>()
+
+  for (const response of quizResponses) {
+    if (!response.user_id || !response.completed_at) {
+      continue
+    }
+
+    completedCountsByUser.set(response.user_id, (completedCountsByUser.get(response.user_id) ?? 0) + 1)
+  }
+
+  return [...completedCountsByUser.values()].filter((completedCount) => completedCount > 1).length
+}
+
 export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   const eventMap = getVisitEventMap(rows.funnelEvents)
   const visitById = getSourceByVisit(rows.visits)
   const latestQuizResponseByUser = getLatestQuizResponseByUser(rows.quizResponses)
 
   const anonymousVisits = rows.visits.filter((visit) => !visit.user_id)
-  const authenticatedVisits = rows.visits.filter((visit) => !!visit.user_id)
   const anonymousVisitors = new Set(anonymousVisits.map((visit) => visit.visitor_id)).size
-  const authenticatedUsers = new Set(authenticatedVisits.map((visit) => visit.user_id).filter(Boolean)).size
 
   const sourceBreakdown = [...new Set(rows.visits.map((visit) => visit.source))]
     .sort()
@@ -428,20 +440,20 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     summaryMetrics: [
       { label: 'Total visits', value: rows.visits.length },
       { label: 'Anonymous visitors', value: anonymousVisitors },
-      { label: 'Authenticated users', value: authenticatedUsers },
       {
-        label: 'Quiz completers',
+        label: 'Quiz completed',
         value: getUniqueEventActors({ eventName: 'quiz_completed', funnelEvents: rows.funnelEvents, visitById }),
       },
       {
-        label: 'Email submitters',
+        label: 'Emails submitted',
         value: getUniqueEventActors({ eventName: 'email_submitted', funnelEvents: rows.funnelEvents, visitById }),
       },
-      {
-        label: 'Verified magic-link users',
-        value: getUniqueEventActors({ eventName: 'magic_link_verified', funnelEvents: rows.funnelEvents, visitById }),
-      },
       { label: 'Registered users', value: rows.userProfiles.length },
+      { label: 'Repeat quiz users', value: countRepeatQuizUsers(rows.quizResponses) },
+      {
+        label: 'Buy intents',
+        value: getUniqueEventActors({ eventName: 'paywall_cta_clicked', funnelEvents: rows.funnelEvents, visitById }),
+      },
     ],
     anonymousConversion: buildConversionRows({
       visits: rows.visits,

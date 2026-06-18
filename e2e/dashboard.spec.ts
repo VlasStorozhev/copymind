@@ -13,13 +13,16 @@ test.beforeAll(async () => {
 })
 
 test.describe('/dashboard', () => {
-  test('unauthenticated visitors are redirected to sign in', async ({ page }) => {
+  test('unauthenticated visitors see the sign-in required state', async ({ page }) => {
     test.skip(!!setupError, setupError ?? 'Dashboard auth setup unavailable')
 
     const response = await page.goto('/dashboard')
 
-    await expect(page).toHaveURL(/\/login(?:\?.*)?$/)
     expect(response?.status()).toBe(200)
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await expect(page.getByRole('heading', { name: 'Admin dashboard' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Sign in required' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
   })
 
   test('active admins can open the dashboard', async ({ page, context }) => {
@@ -37,11 +40,11 @@ test.describe('/dashboard', () => {
 
     expect(response?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Admin dashboard' })).toBeVisible()
-    await expect(page.getByText('Private analytics')).toBeVisible()
+    await expect(page.getByText('Private analytics')).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Source breakdown' })).toBeVisible()
   })
 
-  test('regular users do not receive dashboard data', async ({ page, context }) => {
+  test('regular users see the admin access required state', async ({ page, context }) => {
     test.skip(!!setupError, setupError ?? 'Dashboard auth setup unavailable')
 
     const admin = await ensureDashboardE2EUsers()
@@ -54,6 +57,9 @@ test.describe('/dashboard', () => {
 
     const response = await page.goto('/dashboard')
 
-    expect(response?.status()).toBe(404)
+    expect(response?.status()).toBe(200)
+    await expect(page.getByRole('heading', { name: 'Admin dashboard' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Admin access required' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Source breakdown' })).toHaveCount(0)
   })
 })

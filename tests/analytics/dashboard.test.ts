@@ -32,11 +32,11 @@ describe('buildDashboardSummary', () => {
     expect(summary.summaryMetrics).toEqual([
       { label: 'Total visits', value: 3 },
       { label: 'Anonymous visitors', value: 2 },
-      { label: 'Authenticated users', value: 1 },
-      { label: 'Quiz completers', value: 2 },
-      { label: 'Email submitters', value: 1 },
-      { label: 'Verified magic-link users', value: 1 },
+      { label: 'Quiz completed', value: 2 },
+      { label: 'Emails submitted', value: 1 },
       { label: 'Registered users', value: 1 },
+      { label: 'Repeat quiz users', value: 0 },
+      { label: 'Buy intents', value: 2 },
     ])
 
     expect(summary.sourceBreakdown).toEqual([
@@ -148,7 +148,7 @@ describe('buildDashboardSummary', () => {
     expect('gender' in summary.registeredUsers[0]).toBe(false)
   })
 
-  it('deduplicates summary action metrics by authenticated user', () => {
+  it('deduplicates summary action metrics by authenticated user and counts repeat quiz users', () => {
     const summaryWithRepeatUser = buildDashboardSummary({
       visits: [
         ...fixture.visits,
@@ -179,15 +179,26 @@ describe('buildDashboardSummary', () => {
           created_at: '2026-06-02T10:01:15.000Z',
         },
       ],
-      quizResponses: fixture.quizResponses,
+      quizResponses: [
+        ...fixture.quizResponses,
+        {
+          ...fixture.quizResponses[1],
+          id: 'quiz_facebook_return_second',
+          visit_id: 'visit_facebook_repeat_second',
+          created_at: '2026-06-02T10:00:40.000Z',
+          updated_at: '2026-06-02T10:01:00.000Z',
+          completed_at: '2026-06-02T10:01:00.000Z',
+        },
+      ],
       userProfiles: fixture.userProfiles,
     })
 
     expect(summaryWithRepeatUser.summaryMetrics).toEqual(
       expect.arrayContaining([
         { label: 'Total visits', value: 4 },
-        { label: 'Authenticated users', value: 1 },
-        { label: 'Quiz completers', value: 2 },
+        { label: 'Quiz completed', value: 2 },
+        { label: 'Repeat quiz users', value: 1 },
+        { label: 'Buy intents', value: 2 },
       ]),
     )
   })

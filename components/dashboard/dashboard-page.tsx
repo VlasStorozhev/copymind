@@ -56,20 +56,16 @@ export function DashboardPage({
 
         <DashboardTableSection
           title="Source breakdown"
-          description="Visits, completions, and downstream actions by acquisition source."
+          description="Key funnel outcomes by acquisition source."
           columns={[
             'Source',
             'Visits',
             'Quiz completions',
             'Email submissions',
-            'Magic links sent',
-            'Magic links verified',
-            'Paywall views',
-            'Paywall clicks',
+            'Buy clicks',
             'Quiz completion rate',
             'Email submission rate',
-            'Magic-link verification rate',
-            'Paywall click rate',
+            'Buy rate',
           ]}
           rows={summary.sourceBreakdown.map((row) => [
             <Badge key={row.source} variant="outline" className="border-border/70 bg-background/90">
@@ -78,13 +74,9 @@ export function DashboardPage({
             row.visits,
             row.quizCompletions,
             row.emailSubmissions,
-            row.magicLinksSent,
-            row.magicLinksVerified,
-            row.paywallViews,
             row.paywallClicks,
             formatPercent(row.quizCompletionRate),
             formatPercent(row.emailSubmissionRate),
-            formatPercent(row.magicLinkVerificationRate),
             formatPercent(row.paywallClickRate),
           ])}
         />
