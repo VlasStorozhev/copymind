@@ -20,6 +20,15 @@ function normalizeReferrerHost(referrer: string) {
   }
 }
 
+function isInternalReferrerHost(hostname: string) {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname.endsWith('.vercel.app')
+  );
+}
+
 export function detectSource(input: {
   url: string;
   referrer: string;
@@ -47,7 +56,7 @@ export function detectSource(input: {
   }
 
   const referrerHost = normalizeReferrerHost(referrer);
-  if (referrerHost) {
+  if (referrerHost && !isInternalReferrerHost(referrerHost)) {
     return {
       source: referrerHost,
       medium: null,

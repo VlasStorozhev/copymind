@@ -226,6 +226,33 @@ function getSourceByVisit(visits: VisitRow[]) {
   return map
 }
 
+function getUniqueEventActors(params: {
+  eventName: string
+  funnelEvents: FunnelEventRow[]
+  visitById: Map<string, VisitRow>
+}) {
+  const actors = new Set<string>()
+
+  for (const event of params.funnelEvents) {
+    if (event.event_type !== params.eventName) {
+      continue
+    }
+
+    const visit = params.visitById.get(event.visit_id)
+    const actorKey = visit?.user_id
+      ? `user:${visit.user_id}`
+      : event.user_id
+        ? `user:${event.user_id}`
+        : visit?.visitor_id
+          ? `visitor:${visit.visitor_id}`
+          : `visit:${event.visit_id}`
+
+    actors.add(actorKey)
+  }
+
+  return actors.size
+}
+
 export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   const eventMap = getVisitEventMap(rows.funnelEvents)
   const visitById = getSourceByVisit(rows.visits)
@@ -233,6 +260,8 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
 
   const anonymousVisits = rows.visits.filter((visit) => !visit.user_id)
   const authenticatedVisits = rows.visits.filter((visit) => !!visit.user_id)
+  const anonymousVisitors = new Set(anonymousVisits.map((visit) => visit.visitor_id)).size
+  const authenticatedUsers = new Set(authenticatedVisits.map((visit) => visit.user_id).filter(Boolean)).size
 
   const sourceBreakdown = [...new Set(rows.visits.map((visit) => visit.source))]
     .sort()
@@ -398,19 +427,19 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   return {
     summaryMetrics: [
       { label: 'Total visits', value: rows.visits.length },
-      { label: 'Anonymous visits', value: anonymousVisits.length },
-      { label: 'Authenticated visits', value: authenticatedVisits.length },
+      { label: 'Anonymous visitors', value: anonymousVisitors },
+      { label: 'Authenticated users', value: authenticatedUsers },
       {
-        label: 'Quiz completions',
-        value: rows.funnelEvents.filter((event) => event.event_type === 'quiz_completed').length,
+        label: 'Quiz completers',
+        value: getUniqueEventActors({ eventName: 'quiz_completed', funnelEvents: rows.funnelEvents, visitById }),
       },
       {
-        label: 'Email submissions',
-        value: rows.funnelEvents.filter((event) => event.event_type === 'email_submitted').length,
+        label: 'Email submitters',
+        value: getUniqueEventActors({ eventName: 'email_submitted', funnelEvents: rows.funnelEvents, visitById }),
       },
       {
-        label: 'Magic links verified',
-        value: rows.funnelEvents.filter((event) => event.event_type === 'magic_link_verified').length,
+        label: 'Verified magic-link users',
+        value: getUniqueEventActors({ eventName: 'magic_link_verified', funnelEvents: rows.funnelEvents, visitById }),
       },
       { label: 'Registered users', value: rows.userProfiles.length },
     ],

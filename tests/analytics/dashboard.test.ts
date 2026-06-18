@@ -31,11 +31,11 @@ describe('buildDashboardSummary', () => {
   it('aggregates source breakdown, registered-user attribution, and summary metrics', () => {
     expect(summary.summaryMetrics).toEqual([
       { label: 'Total visits', value: 3 },
-      { label: 'Anonymous visits', value: 2 },
-      { label: 'Authenticated visits', value: 1 },
-      { label: 'Quiz completions', value: 2 },
-      { label: 'Email submissions', value: 1 },
-      { label: 'Magic links verified', value: 1 },
+      { label: 'Anonymous visitors', value: 2 },
+      { label: 'Authenticated users', value: 1 },
+      { label: 'Quiz completers', value: 2 },
+      { label: 'Email submitters', value: 1 },
+      { label: 'Verified magic-link users', value: 1 },
       { label: 'Registered users', value: 1 },
     ])
 
@@ -146,5 +146,49 @@ describe('buildDashboardSummary', () => {
     ])
 
     expect('gender' in summary.registeredUsers[0]).toBe(false)
+  })
+
+  it('deduplicates summary action metrics by authenticated user', () => {
+    const summaryWithRepeatUser = buildDashboardSummary({
+      visits: [
+        ...fixture.visits,
+        {
+          ...fixture.visits[1],
+          id: 'visit_facebook_repeat_second',
+          visitor_id: 'visitor_facebook_return_second',
+        },
+      ],
+      funnelEvents: [
+        ...fixture.funnelEvents,
+        {
+          id: 'event_facebook_second_quiz_completed',
+          visit_id: 'visit_facebook_repeat_second',
+          event_type: 'quiz_completed',
+          user_id: 'user_google_repeat',
+          step: 'quiz',
+          metadata: {},
+          created_at: '2026-06-02T10:01:00.000Z',
+        },
+        {
+          id: 'event_facebook_second_paywall_clicked',
+          visit_id: 'visit_facebook_repeat_second',
+          event_type: 'paywall_cta_clicked',
+          user_id: 'user_google_repeat',
+          step: 'paywall',
+          metadata: {},
+          created_at: '2026-06-02T10:01:15.000Z',
+        },
+      ],
+      quizResponses: fixture.quizResponses,
+      userProfiles: fixture.userProfiles,
+    })
+
+    expect(summaryWithRepeatUser.summaryMetrics).toEqual(
+      expect.arrayContaining([
+        { label: 'Total visits', value: 4 },
+        { label: 'Authenticated users', value: 1 },
+        { label: 'Quiz completers', value: 2 },
+      ]),
+    )
   })
 })
