@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, RefreshCw, Trash2 } from 'lucide-react'
 
 import { DashboardSummaryGrid } from '@/components/dashboard/dashboard-summary-grid'
 import { DashboardTableSection } from '@/components/dashboard/dashboard-table-section'
@@ -40,6 +40,17 @@ export function DashboardPage({
   userEmail: string | null
   onDashboardUpdated?: () => Promise<void>
 }) {
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = onDashboardUpdated
+    ? () => {
+        setRefreshing(true)
+        void onDashboardUpdated().finally(() => {
+          setRefreshing(false)
+        })
+      }
+    : undefined
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,250,240,0.9),rgba(255,255,255,1)_42%)] px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -59,6 +70,8 @@ export function DashboardPage({
           title="Conversion funnel"
           description="One end-to-end all-time funnel. Paywall CTA click is the MVP purchase-intent signal."
           columns={['Step', 'Users', 'Conv. from prev', 'Conv. from visitors', 'Cost per user']}
+          isRefreshing={refreshing}
+          onRefresh={handleRefresh}
           rows={summary.funnelConversion.map((row) => [
             row.step,
             row.users,
@@ -68,7 +81,7 @@ export function DashboardPage({
           ])}
         />
 
-        <TrafficTreeSection summary={summary} />
+        <TrafficTreeSection summary={summary} isRefreshing={refreshing} onRefresh={handleRefresh} />
 
         <DashboardTableSection
           title="Registered-user attribution"
@@ -89,6 +102,8 @@ export function DashboardPage({
             'First authenticated at',
             'Last seen at',
           ]}
+          isRefreshing={refreshing}
+          onRefresh={handleRefresh}
           rows={summary.registeredUsers.map((row) => [
             row.email,
             row.firstTouchSource,
@@ -111,6 +126,8 @@ export function DashboardPage({
           title="Unverified email leads"
           description="Submitted emails that have not completed magic-link verification yet."
           columns={['Email', 'Submitted at', 'Source', 'Medium', 'Campaign', 'Creative']}
+          isRefreshing={refreshing}
+          onRefresh={handleRefresh}
           rows={
             summary.pendingEmailLeads.length > 0
               ? summary.pendingEmailLeads.map((lead) => [
@@ -157,7 +174,15 @@ function flattenTrafficNodes(nodes: TrafficTreeNode[], expandedNodes: Set<string
   return rows
 }
 
-function TrafficTreeSection({ summary }: { summary: DashboardSummary }) {
+function TrafficTreeSection({
+  summary,
+  isRefreshing,
+  onRefresh,
+}: {
+  summary: DashboardSummary
+  isRefreshing: boolean
+  onRefresh?: () => void
+}) {
   const [expandedNodes, setExpandedNodes] = useState(() => getDefaultExpandedTrafficNodes(summary.trafficTree))
 
   useEffect(() => {
@@ -168,9 +193,23 @@ function TrafficTreeSection({ summary }: { summary: DashboardSummary }) {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Traffic breakdown</CardTitle>
-        <CardDescription>Drill down from source to campaign to creative without duplicating rows.</CardDescription>
+      <CardHeader className="flex flex-row items-start justify-between gap-3">
+        <div className="space-y-1.5">
+          <CardTitle>Traffic breakdown</CardTitle>
+          <CardDescription>Drill down from source to campaign to creative without duplicating rows.</CardDescription>
+        </div>
+        {onRefresh ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isRefreshing}
+            onClick={onRefresh}
+          >
+            <RefreshCw className={isRefreshing ? 'animate-spin' : undefined} />
+            Refresh
+          </Button>
+        ) : null}
       </CardHeader>
       <CardContent>
         <Table>

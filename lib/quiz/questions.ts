@@ -83,7 +83,7 @@ export type QuizQuestion<TQuestionId extends QuestionId = QuestionId> = {
 export const quizQuestions: readonly QuizQuestion[] = [
   {
     id: 'profile_gender',
-    prompt: 'Who are you creating this profile for?',
+    prompt: 'How do you identify?',
     options: [
       { id: 'woman', label: 'Woman' },
       { id: 'man', label: 'Man' },

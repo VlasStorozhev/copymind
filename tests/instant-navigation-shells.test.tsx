@@ -52,7 +52,7 @@ describe('instant navigation shells', () => {
     render(<QuizPageShell />)
 
     expect(screen.queryByText('Decision profile assessment')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Who are you creating this profile for?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'How do you identify?' })).toBeInTheDocument()
   })
 
   it('advances quiz questions immediately after selecting an answer', async () => {
@@ -63,7 +63,7 @@ describe('instant navigation shells', () => {
     await userEvent.click(screen.getByRole('radio', { name: /Woman/ }))
 
     expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Who are you creating this profile for?' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'How do you identify?' })).not.toBeInTheDocument()
     expect(
       screen.getByRole('heading', { name: 'What kind of decisions do you get stuck on most often?' }),
     ).toBeInTheDocument()

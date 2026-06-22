@@ -82,7 +82,7 @@ Legend:
 
 | Requirement | Status | How |
 | --- | --- | --- |
-| Dashboard credentials are provided | [ ] | Provide admin credentials or access instructions. |
+| Dashboard credentials are provided | [x] | README documents the admin magic-link test email: `oleksii.rumiiantsev@gen.tech`. |
 | Admin-only dashboard access is documented | [x] | Explain that admin access is managed through the Supabase `admin_users` table. |
 | Test user or test instructions are provided | [x] | Include test email/user instructions in README. |
 
@@ -90,7 +90,7 @@ Legend:
 
 | Requirement | Status | How |
 | --- | --- | --- |
-| GitHub repository is provided | [ ] | Include repository URL. |
+| GitHub repository is provided | [x] | Repository URL is `git@github.com:VlasStorozhev/copymind.git`. |
 | Deployed funnel link is provided | [x] | README includes `https://decisionmind.space`. |
 | Deployed dashboard link is provided | [x] | README includes `https://decisionmind.space/dashboard`; access requires admin authentication. |
 | Dashboard access instructions are provided | [x] | Include `admin_users` access instructions in README. |
