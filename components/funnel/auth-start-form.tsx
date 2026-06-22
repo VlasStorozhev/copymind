@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { sendAuthStartEvent, sendFunnelVisitEvent } from '@/components/funnel/event-client'
+import { cn } from '@/lib/utils'
 
 type StartFormMode = 'quiz_email_capture' | 'returning_login'
 
@@ -63,7 +64,13 @@ export function AuthStartForm({
   const canSubmit = useMemo(() => isValidEmail(email) && !isPending, [email, isPending])
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-6 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm shadow-black/5 sm:p-6">
+    <div
+      data-testid="auth-start-form"
+      className={cn(
+        'mx-auto w-full max-w-xl space-y-6 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm shadow-black/5 sm:p-6',
+        mode === 'quiz_email_capture' ? 'mb-24 sm:mb-[356px]' : null,
+      )}
+    >
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {mode === 'quiz_email_capture' ? 'Save your result' : 'Sign in'}

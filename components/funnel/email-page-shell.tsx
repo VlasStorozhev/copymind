@@ -28,7 +28,10 @@ export function EmailPageShell({
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,250,240,0.9),rgba(255,255,255,1)_42%)] px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center">
+      <div
+        data-testid="email-page-content"
+        className="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center"
+      >
         {!quizResponseId ? (
           <div className="space-y-6 rounded-2xl border border-border/70 bg-card/95 p-5 shadow-sm shadow-black/5 sm:p-6">
             <Alert variant="destructive">

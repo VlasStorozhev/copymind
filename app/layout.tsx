@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Copymind Marketing Funnel MVP",
-  description: "Scaffolded Next.js application for the Copymind marketing funnel MVP.",
+  title: "Decisionmind Marketing Funnel MVP",
+  description: "Scaffolded Next.js application for the Decisionmind marketing funnel MVP.",
 };
 
 export default function RootLayout({

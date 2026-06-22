@@ -1,6 +1,6 @@
-# Copymind Marketing Funnel MVP
+# Decisionmind Marketing Funnel MVP
 
-This repository contains the Copymind marketing funnel MVP and the private analytics dashboard.
+This repository contains the Decisionmind marketing funnel MVP and the private analytics dashboard.
 
 ## Stack
 
@@ -123,7 +123,7 @@ vercel deploy --prod
 
 - Public funnel URL: `https://project-jodbb.vercel.app`
 - Public dashboard URL: `https://project-jodbb.vercel.app/dashboard`
-- Latest production deployment: `https://copymind-fobujdy7d-vlas1414s-projects.vercel.app`
+- Latest production deployment: `https://decisionmind-fobujdy7d-vlas1414s-projects.vercel.app`
 - Current deployment-specific access status: Vercel protection/SSO returns HTTP 401 for `*.vlas1414s-projects.vercel.app` deployment URLs. Use the public alias above for browser testing.
 - Dashboard access instructions: sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`.
 

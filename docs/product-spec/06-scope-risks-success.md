@@ -65,7 +65,7 @@ Future versions could add:
 - lifecycle email sequences by decision pattern;
 - reminders for unresolved decisions;
 - qualitative analysis of current-decision free text;
-- deeper Copymind memory integration.
+- deeper Decisionmind memory integration.
 
 These extensions should be positioned as roadmap opportunities, not as part of the initial experience.
 

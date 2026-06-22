@@ -51,14 +51,14 @@ describe('detectSource', () => {
   it('treats internal app referrers as direct when utm_source is missing', () => {
     const internalReferrers = [
       'http://localhost:3000/app',
-      'https://copymind-pdi3mpa29-vlas1414s-projects.vercel.app/quiz',
+      'https://decisionmind-pdi3mpa29-vlas1414s-projects.vercel.app/quiz',
       'https://project-jodbb.vercel.app/login',
     ];
 
     for (const referrer of internalReferrers) {
       expect(
         detectSource({
-          url: 'https://copymind.app/dashboard',
+          url: 'https://decisionmind.app/dashboard',
           referrer,
         }),
       ).toMatchObject({

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build and deploy the Copymind Marketing Funnel MVP end-to-end: landing, quiz, Supabase magic-link auth, authenticated `/app`, mock paywall, admin-only analytics dashboard, attribution, and verification docs.
+**Goal:** Build and deploy the Decisionmind Marketing Funnel MVP end-to-end: landing, quiz, Supabase magic-link auth, authenticated `/app`, mock paywall, admin-only analytics dashboard, attribution, and verification docs.
 
 **Architecture:** Use one Next.js App Router application for both public funnel routes and private dashboard routes. Supabase Auth owns passwordless sessions; Supabase Postgres stores visits, quiz responses, auth attempts, funnel events, profiles, attribution, and admin access. Server routes/actions perform all anonymous writes, auth-attempt writes, attribution updates, and dashboard reads.
 

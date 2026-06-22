@@ -75,7 +75,7 @@ export function AppShell() {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-            Copymind
+            Decisionmind
           </Link>
           {isAdmin ? (
             <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">

@@ -1,6 +1,6 @@
 # AI Decision Twin Onboarding Product Specification
 
-This is the index for the Copymind marketing funnel MVP product specification.
+This is the index for the Decisionmind marketing funnel MVP product specification.
 
 The full specification is split into focused files so implementation agents can read only the relevant product context for each task.
 

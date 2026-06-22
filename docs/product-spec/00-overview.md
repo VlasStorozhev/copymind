@@ -1,8 +1,8 @@
 ## Overview
 
-AI Decision Twin Onboarding is a focused acquisition and onboarding funnel for Copymind. It helps users identify their recurring decision-making pattern, captures high-signal personalization data, and creates a structured starting point for a future AI Twin experience.
+AI Decision Twin Onboarding is a focused acquisition and onboarding funnel for Decisionmind. It helps users identify their recurring decision-making pattern, captures high-signal personalization data, and creates a structured starting point for a future AI Twin experience.
 
-The experience does not present AI chat or agent behavior in the initial flow. It uses explicit quiz answers and transparent deterministic logic to generate a decision profile. This keeps the first product moment honest, useful, and measurable while still aligning with Copymind's broader promise of a personalized AI twin that understands the user's inner patterns over time.
+The experience does not present AI chat or agent behavior in the initial flow. It uses explicit quiz answers and transparent deterministic logic to generate a decision profile. This keeps the first product moment honest, useful, and measurable while still aligning with Decisionmind's broader promise of a personalized AI twin that understands the user's inner patterns over time.
 
 ## Product Hypothesis
 
@@ -20,7 +20,7 @@ A focused decision-making onboarding flow is expected to produce healthy email s
 
 > "I want to understand why I get stuck on decisions and how to make clearer choices before the same pattern repeats."
 
-For Copymind, the quiz creates business value by collecting structured first-party data that can support personalization, lifecycle messaging, segmentation, and future product development.
+For Decisionmind, the quiz creates business value by collecting structured first-party data that can support personalization, lifecycle messaging, segmentation, and future product development.
 
 The initial release should evaluate this assumption through absolute funnel health: email submission rate, quiz completion rate, paywall CTA intent, and the distribution of decision patterns. Any claim that this flow outperforms a broad self-insight quiz should be treated as a future experiment because the initial release does not include an A/B test or a live broad-quiz baseline.
 
@@ -50,7 +50,7 @@ The onboarding flow should help the user answer:
 - What usually blocks me?
 - What emotional driver is underneath the pattern?
 - What kind of support would help me choose with more clarity?
-- What should Copymind learn first to personalize my experience?
+- What should Decisionmind learn first to personalize my experience?
 
 ## Product Positioning
 
@@ -60,7 +60,7 @@ Primary positioning:
 
 Supporting message:
 
-> Answer a few questions about how you make decisions. Copymind will identify your decision pattern and prepare a starting context for your AI Decision Twin.
+> Answer a few questions about how you make decisions. Decisionmind will identify your decision pattern and prepare a starting context for your AI Decision Twin.
 
 Avoided positioning:
 
@@ -76,5 +76,5 @@ Preferred language:
 - "Your likely blocker"
 - "Recommended support style"
 - "Starting context for your AI Twin"
-- "What Copymind should learn first"
+- "What Decisionmind should learn first"
 

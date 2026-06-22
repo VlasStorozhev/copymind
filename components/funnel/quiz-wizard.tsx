@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, LoaderCircle } from 'lucide-react'
+import { ChevronLeft, LoaderCircle } from 'lucide-react'
 
 import { quizQuestions } from '@/lib/quiz/questions'
 import { Button } from '@/components/ui/button'
@@ -39,6 +39,21 @@ export function QuizWizard({ authenticated }: { authenticated: boolean | null })
     return null
   }
 
+  const handleAnswerChange = (value: string) => {
+    setAnswers((current) => ({ ...current, [question.id]: value }))
+    void sendQuizEvent({
+      action: 'answer',
+      metadata: {
+        question_id: question.id,
+        answer_id: value,
+      },
+    })
+
+    if (!isLastStep) {
+      setStep((current) => Math.min(quizQuestions.length - 1, current + 1))
+    }
+  }
+
   return (
     <Card className="mx-auto mb-24 w-full max-w-xl border-border/60 bg-card/95 shadow-sm shadow-black/5 sm:mb-[300px]">
       <CardHeader className="space-y-3 border-b border-border/60 pb-4">
@@ -66,16 +81,7 @@ export function QuizWizard({ authenticated }: { authenticated: boolean | null })
             aria-label={question.prompt}
             className="grid gap-2"
             value={selectedAnswer}
-            onValueChange={(value) => {
-              setAnswers((current) => ({ ...current, [question.id]: value }))
-              void sendQuizEvent({
-                action: 'answer',
-                metadata: {
-                  question_id: question.id,
-                  answer_id: value,
-                },
-              })
-            }}
+            onValueChange={handleAnswerChange}
           >
             {question.options.map((option) => (
               <label
@@ -101,47 +107,43 @@ export function QuizWizard({ authenticated }: { authenticated: boolean | null })
             <ChevronLeft className="size-4" />
             Back
           </Button>
-          <Button
-            type="button"
-            size="lg"
-            className="gap-2"
-            disabled={!selectedAnswer || submitting}
-            onClick={() => {
-              if (!isLastStep) {
-                setStep((current) => Math.min(quizQuestions.length - 1, current + 1))
-                return
-              }
+          {isLastStep ? (
+            <Button
+              type="button"
+              size="lg"
+              className="gap-2"
+              disabled={!selectedAnswer || submitting}
+              onClick={() => {
+                startTransition(async () => {
+                  const response = await fetch('/api/quiz', {
+                    method: 'POST',
+                    headers: {
+                      'content-type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                      action: 'submit',
+                      answers: quizQuestions.map((item) => ({
+                        questionId: item.id,
+                        answerId: answers[item.id],
+                      })),
+                    }),
+                  })
 
-              startTransition(async () => {
-                const response = await fetch('/api/quiz', {
-                  method: 'POST',
-                  headers: {
-                    'content-type': 'application/json',
-                  },
-                  credentials: 'same-origin',
-                  body: JSON.stringify({
-                    action: 'submit',
-                    answers: quizQuestions.map((item) => ({
-                      questionId: item.id,
-                      answerId: answers[item.id],
-                    })),
-                  }),
+                  const payload = (await response.json().catch(() => null)) as
+                    | { next_url?: string }
+                    | null
+
+                  if (response.ok && payload?.next_url) {
+                    router.push(payload.next_url)
+                  }
                 })
-
-                const payload = (await response.json().catch(() => null)) as
-                  | { next_url?: string }
-                  | null
-
-                if (response.ok && payload?.next_url) {
-                  router.push(payload.next_url)
-                }
-              })
-            }}
-          >
-            {submitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
-            {isLastStep ? 'See my result' : 'Next'}
-            {!isLastStep ? <ChevronRight className="size-4" /> : null}
-          </Button>
+              }}
+            >
+              {submitting ? <LoaderCircle className="size-4 animate-spin" /> : null}
+              See my result
+            </Button>
+          ) : null}
         </div>
       </CardContent>
     </Card>

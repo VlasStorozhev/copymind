@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 
 describe("test setup", () => {
   it("provides jsdom and jest-dom matchers", () => {
-    render(<div>Hello, Copymind</div>);
+    render(<div>Hello, Decisionmind</div>);
 
-    expect(screen.getByText("Hello, Copymind")).toBeInTheDocument();
+    expect(screen.getByText("Hello, Decisionmind")).toBeInTheDocument();
   });
 });

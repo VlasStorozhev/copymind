@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AppShell } from '@/components/app/app-shell'
 import { DashboardShell } from '@/components/dashboard/dashboard-shell'
 import { DecisionProfile } from '@/components/funnel/DecisionProfile'
+import { EmailPageShell } from '@/components/funnel/email-page-shell'
 import { LandingShell } from '@/components/funnel/landing-shell'
 import { LoginPageShell } from '@/components/funnel/login-page-shell'
 import { MockPaywall } from '@/components/funnel/MockPaywall'
@@ -54,12 +55,35 @@ describe('instant navigation shells', () => {
     expect(screen.getByRole('heading', { name: 'Who are you creating this profile for?' })).toBeInTheDocument()
   })
 
+  it('advances quiz questions immediately after selecting an answer', async () => {
+    vi.stubGlobal('fetch', deferFetch())
+
+    render(<QuizPageShell />)
+
+    await userEvent.click(screen.getByRole('radio', { name: /Woman/ }))
+
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Who are you creating this profile for?' })).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'What kind of decisions do you get stuck on most often?' }),
+    ).toBeInTheDocument()
+  })
+
+  it('uses the quiz card vertical offset on the email capture form', () => {
+    vi.stubGlobal('fetch', deferFetch())
+
+    render(<EmailPageShell quizResponseId="quiz-response-1" authError={null} />)
+
+    expect(screen.getByTestId('auth-start-form')).toHaveClass('mb-24')
+    expect(screen.getByTestId('auth-start-form')).toHaveClass('sm:mb-[356px]')
+  })
+
   it('renders the app shell immediately before profile data resolves', () => {
     vi.stubGlobal('fetch', deferFetch())
 
     render(<AppShell />)
 
-    expect(screen.getByRole('link', { name: 'Copymind' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Decisionmind' })).toBeInTheDocument()
     expect(screen.getByText('Loading your decision profile')).toBeInTheDocument()
   })
 

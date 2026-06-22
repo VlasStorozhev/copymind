@@ -7,7 +7,7 @@ test.describe('marketing funnel', () => {
     await expect(page.getByRole('heading', { name: 'Discover your decision pattern' })).toBeVisible()
     await expect(
       page.getByRole('img', {
-        name: /decision paths and a subtle AI twin presence/i,
+        name: /person facing a translucent AI decision twin/i,
       }),
     ).toBeVisible()
 
@@ -19,11 +19,15 @@ test.describe('marketing funnel', () => {
       }),
     ).toBeVisible()
 
-    const nextButton = page.getByRole('button', { name: /^Next$/ })
-    await expect(nextButton).toBeDisabled()
+    await expect(page.getByRole('button', { name: /^Next$/ })).not.toBeVisible()
 
-    await page.getByRole('radio', { name: 'Woman' }).check()
-    await expect(nextButton).toBeEnabled()
+    await page.getByRole('radio', { name: /Woman/ }).click()
+    await expect(page.getByRole('button', { name: /^Next$/ })).not.toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: /what kind of decisions do you get stuck on most often\?/i,
+      }),
+    ).toBeVisible()
   })
 
   test.describe('authenticated state', () => {
