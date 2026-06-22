@@ -15,9 +15,9 @@ describe('env helpers', () => {
   it('prefers NEXT_PUBLIC_SITE_URL for auth redirects when configured', () => {
     expect(
       getAuthRedirectBaseUrl({
-        siteUrl: 'https://project-jodbb.vercel.app/',
+        siteUrl: 'https://decisionmind.space/',
         requestUrl: 'http://localhost:3000/login',
       }),
-    ).toBe('https://project-jodbb.vercel.app');
+    ).toBe('https://decisionmind.space');
   });
 });

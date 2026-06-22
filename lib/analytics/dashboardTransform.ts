@@ -5,7 +5,7 @@ export type DashboardSummary = {
     step: string
     users: number
     conversionFromPrevious: number | null
-    conversionFromLanding: number | null
+    conversionFromVisitors: number | null
     costPerUserCents: number | null
   }>
   sourceBreakdown: Array<{
@@ -76,7 +76,8 @@ export type TrafficTreeNode = {
   level: 'source' | 'campaign' | 'creative'
   label: string
   spendCents: number
-  landingUsers: number
+  visitors: number
+  quizStarted: number
   quizCompleted: number
   emailSubmitted: number
   purchaseIntent: number
@@ -170,15 +171,27 @@ type DashboardRows = {
   }>
 }
 
-const FUNNEL_STEPS = [
-  'landing_viewed',
-  'start_clicked',
-  'quiz_completed',
-  'email_submitted',
-  'magic_link_verified',
-  'result_viewed',
-  'paywall_viewed',
-  'paywall_cta_clicked',
+const FUNNEL_STEPS: Array<{ label: string; eventName: string | null }> = [
+  { label: 'Visitors', eventName: null },
+  { label: 'Quiz Started', eventName: 'quiz_started' },
+  { label: 'Quiz Completed', eventName: 'quiz_completed' },
+  { label: 'Email Submitted', eventName: 'email_submitted' },
+  { label: 'Result Viewed', eventName: 'result_viewed' },
+  { label: 'Purchase Intent', eventName: 'paywall_cta_clicked' },
+]
+
+const EXCLUDED_ACQUISITION_PATH_PREFIXES = [
+  '/privacy',
+  '/privacy-policy',
+  '/terms',
+  '/contact',
+  '/about',
+  '/blog',
+  '/dashboard',
+  '/email',
+  '/login',
+  '/auth',
+  '/api',
 ]
 
 function divide(numerator: number, denominator: number) {
@@ -211,6 +224,76 @@ function getVisitEventMap(funnelEvents: FunnelEventRow[]) {
 
 function hasEvent(eventMap: Map<string, Set<string>>, visitId: string, eventName: string) {
   return eventMap.get(visitId)?.has(eventName) ?? false
+}
+
+function getVisitActorKey(visit: VisitRow) {
+  return visit.user_id ? `user:${visit.user_id}` : `visitor:${visit.visitor_id}`
+}
+
+function getVisitPath(landingUrl: string | null) {
+  if (!landingUrl) {
+    return '/'
+  }
+
+  try {
+    return new URL(landingUrl, 'https://decisionmind.local').pathname || '/'
+  } catch {
+    return '/'
+  }
+}
+
+function isExcludedAcquisitionPath(path: string) {
+  return EXCLUDED_ACQUISITION_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}
+
+function isAcquisitionEntryVisit(visit: VisitRow, eventMap: Map<string, Set<string>>) {
+  const path = getVisitPath(visit.landing_url)
+
+  if (isExcludedAcquisitionPath(path)) {
+    return false
+  }
+
+  return path === '/' || path === '/quiz' || hasEvent(eventMap, visit.id, 'landing_viewed') || hasEvent(eventMap, visit.id, 'quiz_started')
+}
+
+function getAcquisitionVisitorActors(visits: VisitRow[], eventMap: Map<string, Set<string>>) {
+  const firstEntryByActor = new Map<string, VisitRow>()
+
+  for (const visit of visits) {
+    if (!isAcquisitionEntryVisit(visit, eventMap)) {
+      continue
+    }
+
+    const actorKey = getVisitActorKey(visit)
+    const current = firstEntryByActor.get(actorKey)
+
+    if (!current || visit.created_at.localeCompare(current.created_at) < 0) {
+      firstEntryByActor.set(actorKey, visit)
+    }
+  }
+
+  return new Set(firstEntryByActor.keys())
+}
+
+function countAcquisitionActorsWithEvent(params: {
+  visits: VisitRow[]
+  eventMap: Map<string, Set<string>>
+  acquisitionActors: Set<string>
+  eventName: string
+}) {
+  const actors = new Set<string>()
+
+  for (const visit of params.visits) {
+    const actorKey = getVisitActorKey(visit)
+
+    if (!params.acquisitionActors.has(actorKey) || !hasEvent(params.eventMap, visit.id, params.eventName)) {
+      continue
+    }
+
+    actors.add(actorKey)
+  }
+
+  return actors.size
 }
 
 function getLatestQuizResponseByUser(quizResponses: QuizResponseRow[]) {
@@ -299,16 +382,25 @@ function buildFunnelRows(params: {
   eventMap: Map<string, Set<string>>
   totalSpendCents: number
 }) {
-  const landingUsers = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
+  const acquisitionActors = getAcquisitionVisitorActors(params.visits, params.eventMap)
+  const visitors = acquisitionActors.size
   let previousUsers: number | null = null
 
   return FUNNEL_STEPS.map((step) => {
-    const users = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, step)).length
+    const users =
+      step.eventName === null
+        ? visitors
+        : countAcquisitionActorsWithEvent({
+            visits: params.visits,
+            eventMap: params.eventMap,
+            acquisitionActors,
+            eventName: step.eventName,
+          })
     const row = {
-      step,
+      step: step.label,
       users,
       conversionFromPrevious: previousUsers === null ? null : divide(users, previousUsers),
-      conversionFromLanding: divide(users, landingUsers),
+      conversionFromVisitors: divide(users, visitors),
       costPerUserCents: users === 0 ? null : Math.round(params.totalSpendCents / users),
     }
 
@@ -352,8 +444,8 @@ function sortTrafficNodes(left: TrafficTreeNode, right: TrafficTreeNode) {
     return left.costPerIntentCents - right.costPerIntentCents
   }
 
-  if (right.landingUsers !== left.landingUsers) {
-    return right.landingUsers - left.landingUsers
+  if (right.visitors !== left.visitors) {
+    return right.visitors - left.visitors
   }
 
   return left.label.localeCompare(right.label)
@@ -368,21 +460,44 @@ function buildTrafficNode(params: {
   eventMap: Map<string, Set<string>>
   children?: TrafficTreeNode[]
 }): TrafficTreeNode {
-  const landingUsers = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
-  const quizCompleted = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'quiz_completed')).length
-  const emailSubmitted = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'email_submitted')).length
-  const purchaseIntent = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'paywall_cta_clicked')).length
+  const acquisitionActors = getAcquisitionVisitorActors(params.visits, params.eventMap)
+  const visitors = acquisitionActors.size
+  const quizStarted = countAcquisitionActorsWithEvent({
+    visits: params.visits,
+    eventMap: params.eventMap,
+    acquisitionActors,
+    eventName: 'quiz_started',
+  })
+  const quizCompleted = countAcquisitionActorsWithEvent({
+    visits: params.visits,
+    eventMap: params.eventMap,
+    acquisitionActors,
+    eventName: 'quiz_completed',
+  })
+  const emailSubmitted = countAcquisitionActorsWithEvent({
+    visits: params.visits,
+    eventMap: params.eventMap,
+    acquisitionActors,
+    eventName: 'email_submitted',
+  })
+  const purchaseIntent = countAcquisitionActorsWithEvent({
+    visits: params.visits,
+    eventMap: params.eventMap,
+    acquisitionActors,
+    eventName: 'paywall_cta_clicked',
+  })
 
   return {
     id: params.id,
     level: params.level,
     label: params.label,
     spendCents: params.spendCents,
-    landingUsers,
+    visitors,
+    quizStarted,
     quizCompleted,
     emailSubmitted,
     purchaseIntent,
-    intentRate: divide(purchaseIntent, landingUsers),
+    intentRate: divide(purchaseIntent, visitors),
     costPerIntentCents: purchaseIntent === 0 ? null : Math.round(params.spendCents / purchaseIntent),
     children: params.children ?? [],
   }

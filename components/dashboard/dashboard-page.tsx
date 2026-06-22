@@ -58,12 +58,12 @@ export function DashboardPage({
         <DashboardTableSection
           title="Conversion funnel"
           description="One end-to-end all-time funnel. Paywall CTA click is the MVP purchase-intent signal."
-          columns={['Step', 'Users', 'Conv. from prev', 'Conv. from landing', 'Cost per user']}
+          columns={['Step', 'Users', 'Conv. from prev', 'Conv. from visitors', 'Cost per user']}
           rows={summary.funnelConversion.map((row) => [
             row.step,
             row.users,
             formatPercent(row.conversionFromPrevious),
-            formatPercent(row.conversionFromLanding),
+            formatPercent(row.conversionFromVisitors),
             formatCurrencyFromCents(row.costPerUserCents, summary.currency),
           ])}
         />
@@ -161,7 +161,8 @@ function TrafficTreeSection({ summary }: { summary: DashboardSummary }) {
             <TableRow>
               <TableHead>Source / Campaign / Creative</TableHead>
               <TableHead>Spend</TableHead>
-              <TableHead>Landing Users</TableHead>
+              <TableHead>Visitors</TableHead>
+              <TableHead>Quiz Started</TableHead>
               <TableHead>Quiz Completed</TableHead>
               <TableHead>Email Submitted</TableHead>
               <TableHead>Purchase Intent</TableHead>
@@ -206,7 +207,8 @@ function TrafficTreeSection({ summary }: { summary: DashboardSummary }) {
                     </div>
                   </TableCell>
                   <TableCell>{formatCurrencyFromCents(node.spendCents, summary.currency)}</TableCell>
-                  <TableCell>{node.landingUsers}</TableCell>
+                  <TableCell>{node.visitors}</TableCell>
+                  <TableCell>{node.quizStarted}</TableCell>
                   <TableCell>{node.quizCompleted}</TableCell>
                   <TableCell>{node.emailSubmitted}</TableCell>
                   <TableCell>{node.purchaseIntent}</TableCell>

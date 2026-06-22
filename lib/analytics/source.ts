@@ -26,6 +26,7 @@ function isInternalReferrerHost(hostname: string) {
     hostname === 'localhost' ||
     hostname === '127.0.0.1' ||
     hostname === '[::1]' ||
+    hostname === 'decisionmind.space' ||
     hostname.endsWith('.vercel.app')
   );
 }

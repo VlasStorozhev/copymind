@@ -55,7 +55,7 @@ describe('detectSource', () => {
     const internalReferrers = [
       'http://localhost:3000/app',
       'https://decisionmind-pdi3mpa29-vlas1414s-projects.vercel.app/quiz',
-      'https://project-jodbb.vercel.app/login',
+      'https://decisionmind.space/login',
     ];
 
     for (const referrer of internalReferrers) {

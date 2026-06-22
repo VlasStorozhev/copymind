@@ -37,31 +37,26 @@ Page view events can repeat when a user reloads or revisits a page. Conversion a
 
 ### Metric Counting Rules
 
-Primary funnel reporting should use visit-level deduplication unless a metric explicitly says otherwise.
+Primary funnel reporting should use unique acquisition visitors unless a metric explicitly says otherwise.
 
-- `landing views`: unique visits with `landing_viewed`.
-- `assessment starts`: unique visits with `start_clicked`.
-- `quiz completions`: unique visits with `quiz_completed`.
-- `email submissions`: unique visits with successful `email_submitted`.
-- `magic links sent`: unique visits with `magic_link_sent`.
-- `magic links verified`: unique visits with `magic_link_verified`.
-- `result views`: unique visits with `result_viewed`.
-- `paywall views`: unique visits where the mock paywall section was displayed on `/app` and `paywall_viewed` was tracked.
-- `paywall CTA clicks`: unique visits with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
+- `visitors`: unique users who entered the acquisition funnel for the first time. Count them once on the first acquisition page they land on, including `/`, `/quiz`, or a future acquisition entry point. Do not count utility pages such as Privacy Policy, Terms, Contact, About, or Blog.
+- `quiz starts`: unique acquisition visitors with `quiz_started`.
+- `quiz completions`: unique acquisition visitors with `quiz_completed`.
+- `email submissions`: unique acquisition visitors with successful `email_submitted`.
+- `result views`: unique acquisition visitors with `result_viewed`.
+- `paywall CTA clicks`: unique acquisition visitors with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
 - `new users`: unique Supabase Auth users first verified in the selected period.
 - `returning users`: unique Supabase Auth users that already existed before the selected visit.
 
-Conversion rates should use the previous step in the single end-to-end validation funnel as the denominator. Authenticated users can skip email capture by design, so the main dashboard may show jumps above 100% at downstream steps when repeat users re-enter after authentication; this is acceptable for MVP diagnosis and should be interpreted with the all-time traffic mix.
+Conversion rates should use the previous step in the single end-to-end validation funnel as the denominator. Conversion from acquisition should use `visitors` as the denominator.
 
 The primary conversion dashboard should use this sequence:
 
-- landing view -> start clicked
-- start clicked -> quiz completed
+- visitors -> quiz started
+- quiz started -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> magic link verified
-- magic link verified -> result viewed
-- result viewed -> mock paywall section viewed
-- paywall viewed -> paywall CTA clicked
+- email submitted -> result viewed
+- result viewed -> paywall CTA clicked
 
 Authenticated repeat-quiz conversion can be used as a secondary diagnostic, but it should not appear as a separate primary dashboard funnel.
 

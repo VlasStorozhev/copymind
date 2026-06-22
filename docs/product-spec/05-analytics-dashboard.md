@@ -39,28 +39,24 @@ For the MVP, `paywall_cta_clicked` is the primary North Star because checkout is
 
 Core funnel metrics:
 
-- landing views
-- assessment starts
+- visitors
+- quiz starts
 - quiz completions
 - email submissions
-- magic links sent
-- magic links verified
-- authenticated repeat quiz completions
 - result views
-- mock paywall section views
 - paywall CTA clicks
 - new users
 - returning users
 
+`Visitors` means unique users who entered the acquisition funnel for the first time. Count a visitor once on the first acquisition page they land on, including the landing page, the quiz page, or a future acquisition entry point. Do not count utility pages such as Privacy Policy, Terms, Contact, About, or Blog.
+
 Single end-to-end conversion table:
 
-- landing view -> start clicked
-- start clicked -> quiz completed
+- visitors -> quiz started
+- quiz started -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> magic link verified
-- magic link verified -> result viewed
-- result viewed -> mock paywall section viewed
-- paywall viewed -> paywall CTA clicked
+- email submitted -> result viewed
+- result viewed -> purchase intent
 
 The main dashboard must not split the primary funnel into anonymous and authenticated tables. Authenticated repeat behavior can remain a secondary diagnostic if needed, but it should not compete with the end-to-end validation funnel.
 
@@ -84,7 +80,8 @@ Traffic breakdown tree:
 - campaign, from `utm_campaign`
 - creative, from `utm_content`
 - spend
-- landing users
+- visitors
+- quiz starts
 - quiz completions
 - email submissions
 - purchase intent

@@ -71,7 +71,7 @@ Local development:
 
 Production:
 
-- Site URL: your deployed Vercel URL
+- Site URL: `https://decisionmind.space`
 - Redirect URL: `${NEXT_PUBLIC_SITE_URL}/auth/callback`
 
 Add the exact preview URL to Supabase allowed redirect URLs before testing magic links on a preview deployment.
@@ -121,8 +121,8 @@ vercel deploy --prod
 
 ## Deployed URLs
 
-- Public funnel URL: `https://project-jodbb.vercel.app`
-- Public dashboard URL: `https://project-jodbb.vercel.app/dashboard`
+- Public funnel URL: `https://decisionmind.space`
+- Public dashboard URL: `https://decisionmind.space/dashboard`
 - Latest production deployment: `https://decisionmind-fobujdy7d-vlas1414s-projects.vercel.app`
 - Current deployment-specific access status: Vercel protection/SSO returns HTTP 401 for `*.vlas1414s-projects.vercel.app` deployment URLs. Use the public alias above for browser testing.
 - Dashboard access instructions: sign in with an authenticated Supabase user whose email or `user_id` matches an active row in `admin_users`.

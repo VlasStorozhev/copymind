@@ -157,6 +157,15 @@ export function buildDashboardFixture(): DashboardFixture {
         created_at: '2026-06-01T09:00:10.000Z',
       },
       {
+        id: 'event_google_quiz_started',
+        visit_id: 'visit_google_first',
+        event_type: 'quiz_started',
+        user_id: null,
+        step: 'quiz',
+        metadata: {},
+        created_at: '2026-06-01T09:00:20.000Z',
+      },
+      {
         id: 'event_google_quiz_completed',
         visit_id: 'visit_google_first',
         event_type: 'quiz_completed',
