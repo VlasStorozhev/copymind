@@ -92,11 +92,23 @@ type AdSpendEntryRow = {
 type EmailLeadRow = {
   id: string
   email: string
+  normalized_email: string | null
   status: string
+  user_id: string | null
   visitor_id: string | null
   visit_id: string | null
   first_submitted_at: string
   last_submitted_at: string
+}
+
+type AuthAttemptRow = {
+  id: string
+  normalized_email: string
+  status: string
+  user_id: string | null
+  visitor_id: string | null
+  visit_id: string | null
+  created_at: string
 }
 
 export type DashboardRows = {
@@ -105,6 +117,7 @@ export type DashboardRows = {
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
   emailLeads: EmailLeadRow[]
+  authAttempts: AuthAttemptRow[]
   dashboardSettings: DashboardSettingsRow | null
   adSpendEntries: AdSpendEntryRow[]
 }
@@ -118,6 +131,7 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
     quizResponsesResult,
     userProfilesResult,
     emailLeadsResult,
+    authAttemptsResult,
     dashboardSettingsResult,
     adSpendEntriesResult,
   ] = await Promise.all([
@@ -131,8 +145,12 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
     loadUserProfiles(client),
     client
       .from('email_leads')
-      .select('id, email, status, visitor_id, visit_id, first_submitted_at, last_submitted_at')
+      .select('id, email, normalized_email, status, user_id, visitor_id, visit_id, first_submitted_at, last_submitted_at')
       .order('last_submitted_at', { ascending: false }),
+    client
+      .from('auth_attempts')
+      .select('id, normalized_email, status, user_id, visitor_id, visit_id, created_at')
+      .order('created_at', { ascending: true }),
     client
       .from('dashboard_settings')
       .select('id, product_price_cents, currency, created_at, updated_at')
@@ -147,6 +165,7 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
   assertDashboardQuery(funnelEventsResult.error, 'funnel_events')
   assertDashboardQuery(quizResponsesResult.error, 'quiz_responses')
   assertDashboardQuery(emailLeadsResult.error, 'email_leads')
+  assertDashboardQuery(authAttemptsResult.error, 'auth_attempts')
 
   return {
     visits: (visitsResult.data ?? []) as VisitRow[],
@@ -154,6 +173,7 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
     quizResponses: (quizResponsesResult.data ?? []) as QuizResponseRow[],
     userProfiles: (userProfilesResult.data ?? []) as UserProfileRow[],
     emailLeads: (emailLeadsResult.data ?? []) as EmailLeadRow[],
+    authAttempts: (authAttemptsResult.data ?? []) as AuthAttemptRow[],
     dashboardSettings: dashboardSettingsResult.error ? null : ((dashboardSettingsResult.data ?? null) as DashboardSettingsRow | null),
     adSpendEntries: adSpendEntriesResult.error ? [] : ((adSpendEntriesResult.data ?? []) as AdSpendEntryRow[]),
   }

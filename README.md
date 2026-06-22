@@ -80,6 +80,8 @@ Add the exact preview URL to Supabase allowed redirect URLs before testing magic
 
 Dashboard access is controlled by the `admin_users` table in Supabase.
 
+> **Admin test account:** admin access has been granted to `oleksii.rumiiantsev@gen.tech`. Use this email to request a magic link and test `/dashboard`.
+
 To grant admin access:
 
 1. Open Supabase Studio.

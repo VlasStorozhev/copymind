@@ -162,11 +162,23 @@ type UserProfileRow = {
 type EmailLeadRow = {
   id: string
   email: string
+  normalized_email?: string | null
   status: string
+  user_id?: string | null
   visitor_id: string | null
   visit_id: string | null
   first_submitted_at: string
   last_submitted_at: string
+}
+
+type AuthAttemptRow = {
+  id: string
+  normalized_email: string
+  status: string
+  user_id: string | null
+  visitor_id: string | null
+  visit_id: string | null
+  created_at: string
 }
 
 type DashboardRows = {
@@ -175,6 +187,7 @@ type DashboardRows = {
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
   emailLeads?: EmailLeadRow[]
+  authAttempts?: AuthAttemptRow[]
   dashboardSettings?: {
     product_price_cents: number
     currency: string
@@ -284,42 +297,142 @@ function getAcquisitionVisitorIds(visits: VisitRow[], eventMap: Map<string, Set<
   return visitorIds
 }
 
+function getIdentityKey(visitorId: string, identityByVisitorId: Map<string, string>) {
+  return identityByVisitorId.get(visitorId) ?? `visitor:${visitorId}`
+}
+
+function setVisitorIdentity(params: {
+  identityByVisitorId: Map<string, string>
+  visitorId: string | null
+  identity: string | null
+}) {
+  if (!params.visitorId || !params.identity) {
+    return
+  }
+
+  const current = params.identityByVisitorId.get(params.visitorId)
+  if (!current || (!current.startsWith('email:') && params.identity.startsWith('email:'))) {
+    params.identityByVisitorId.set(params.visitorId, params.identity)
+  }
+}
+
+function buildIdentityByVisitorId(params: {
+  visits: VisitRow[]
+  quizResponses: QuizResponseRow[]
+  userProfiles: UserProfileRow[]
+  emailLeads: EmailLeadRow[]
+  authAttempts: AuthAttemptRow[]
+  visitById: Map<string, VisitRow>
+}) {
+  const identityByVisitorId = new Map<string, string>()
+  const emailByUserId = new Map(params.userProfiles.map((profile) => [profile.user_id, normalizeEmailValue(profile.email)]))
+  const profileEmailSet = new Set(params.userProfiles.map((profile) => normalizeEmailValue(profile.email)))
+  const identityForUser = (userId: string | null | undefined) => {
+    if (!userId) return null
+    const email = emailByUserId.get(userId)
+    return email ? `email:${email}` : `user:${userId}`
+  }
+  const identityForEmail = (email: string | null | undefined) => (email ? `email:${normalizeEmailValue(email)}` : null)
+
+  for (const visit of params.visits) {
+    setVisitorIdentity({
+      identityByVisitorId,
+      visitorId: visit.visitor_id,
+      identity: identityForUser(visit.user_id),
+    })
+  }
+
+  for (const response of params.quizResponses) {
+    setVisitorIdentity({
+      identityByVisitorId,
+      visitorId: response.visitor_id,
+      identity: identityForUser(response.user_id),
+    })
+  }
+
+  for (const lead of params.emailLeads) {
+    const visitorId = getEmailLeadVisitorId(lead, params.visitById)
+    const normalizedEmail = lead.normalized_email ?? normalizeEmailValue(lead.email)
+    const identity =
+      lead.status === 'verified' || profileEmailSet.has(normalizedEmail)
+        ? identityForEmail(normalizedEmail)
+        : identityForUser(lead.user_id)
+
+    setVisitorIdentity({
+      identityByVisitorId,
+      visitorId,
+      identity,
+    })
+  }
+
+  for (const attempt of params.authAttempts) {
+    const visitorId = attempt.visitor_id ?? (attempt.visit_id ? (params.visitById.get(attempt.visit_id)?.visitor_id ?? null) : null)
+    const identity =
+      profileEmailSet.has(attempt.normalized_email) || attempt.status === 'verified'
+        ? identityForEmail(attempt.normalized_email)
+        : identityForUser(attempt.user_id)
+
+    setVisitorIdentity({
+      identityByVisitorId,
+      visitorId,
+      identity,
+    })
+  }
+
+  return identityByVisitorId
+}
+
+function getIdentitySetForVisitorIds(visitorIds: Set<string>, identityByVisitorId: Map<string, string>) {
+  const identities = new Set<string>()
+
+  for (const visitorId of visitorIds) {
+    identities.add(getIdentityKey(visitorId, identityByVisitorId))
+  }
+
+  return identities
+}
+
 function countVisitorIdsWithAnyEvent(params: {
   visits: VisitRow[]
   eventMap: Map<string, Set<string>>
-  visitorIds: Set<string>
+  visitorIdentities: Set<string>
+  identityByVisitorId: Map<string, string>
   eventNames: string[]
 }) {
-  const visitors = new Set<string>()
+  const identities = new Set<string>()
 
   for (const visit of params.visits) {
     const eventSet = params.eventMap.get(visit.id)
+    const identity = getIdentityKey(visit.visitor_id, params.identityByVisitorId)
 
-    if (!params.visitorIds.has(visit.visitor_id) || !eventSet) {
+    if (!params.visitorIdentities.has(identity) || !eventSet) {
       continue
     }
 
     if (params.eventNames.some((eventName) => eventSet.has(eventName))) {
-      visitors.add(visit.visitor_id)
+      identities.add(identity)
     }
   }
 
-  return visitors.size
+  return identities.size
 }
 
 function countVisitorIdsWithCompletedQuiz(params: {
   quizResponses: QuizResponseRow[]
-  visitorIds: Set<string>
+  visitorIdentities: Set<string>
+  identityByVisitorId: Map<string, string>
 }) {
-  const visitors = new Set<string>()
+  const identities = new Set<string>()
 
   for (const response of params.quizResponses) {
-    if (response.completed_at && params.visitorIds.has(response.visitor_id)) {
-      visitors.add(response.visitor_id)
+    const identity = getIdentityKey(response.visitor_id, params.identityByVisitorId)
+
+    if (response.completed_at && params.visitorIdentities.has(identity)) {
+      identities.add(identity)
     }
   }
 
-  return visitors.size
+  return identities.size
 }
 
 function getEmailLeadVisitorId(lead: EmailLeadRow, visitById: Map<string, VisitRow>) {
@@ -330,27 +443,107 @@ function getEmailLeadVisitorId(lead: EmailLeadRow, visitById: Map<string, VisitR
   return lead.visit_id ? (visitById.get(lead.visit_id)?.visitor_id ?? null) : null
 }
 
-function countVisitorIdsWithEmailLead(params: {
+function normalizeEmailValue(email: string) {
+  return email.trim().toLowerCase()
+}
+
+function getPostEmailIdentityKey(params: {
+  visit: VisitRow
+  userId?: string | null
+  identityByVisitorId: Map<string, string>
+}) {
+  const knownIdentity = params.identityByVisitorId.get(params.visit.visitor_id)
+  if (knownIdentity) {
+    return knownIdentity
+  }
+
+  const userId = params.visit.user_id ?? params.userId
+  if (userId) {
+    return `user:${userId}`
+  }
+
+  return `visitor:${params.visit.visitor_id}`
+}
+
+function countStitchedEventIdentities(params: {
+  visits: VisitRow[]
+  visitById: Map<string, VisitRow>
+  funnelEvents: FunnelEventRow[]
+  visitorIdentities: Set<string>
+  eventNames: string[]
+  identityByVisitorId: Map<string, string>
+}) {
+  const visitIds = new Set(params.visits.map((visit) => visit.id))
+  const identities = new Set<string>()
+
+  for (const event of params.funnelEvents) {
+    if (!params.eventNames.includes(event.event_type) || !visitIds.has(event.visit_id)) {
+      continue
+    }
+
+    const visit = params.visitById.get(event.visit_id)
+    if (!visit) {
+      continue
+    }
+
+    const identity = getPostEmailIdentityKey({
+      visit,
+      userId: event.user_id,
+      identityByVisitorId: params.identityByVisitorId,
+    })
+
+    if (!params.visitorIdentities.has(identity)) {
+      continue
+    }
+
+    identities.add(identity)
+  }
+
+  return identities.size
+}
+
+function countStitchedEmailLeadIdentities(params: {
   emailLeads: EmailLeadRow[]
   visitById: Map<string, VisitRow>
-  visitorIds: Set<string>
+  visitorIdentities: Set<string>
+  identityByVisitorId: Map<string, string>
+  allowedVisitIds?: Set<string>
   status?: string
 }) {
-  const visitors = new Set<string>()
+  const identities = new Set<string>()
 
   for (const lead of params.emailLeads) {
     if (params.status && lead.status !== params.status) {
       continue
     }
 
-    const visitorId = getEmailLeadVisitorId(lead, params.visitById)
+    if (params.allowedVisitIds && (!lead.visit_id || !params.allowedVisitIds.has(lead.visit_id))) {
+      continue
+    }
 
-    if (visitorId && params.visitorIds.has(visitorId)) {
-      visitors.add(visitorId)
+    const visitorId = getEmailLeadVisitorId(lead, params.visitById)
+    if (!visitorId) {
+      continue
+    }
+
+    const visit = lead.visit_id ? (params.visitById.get(lead.visit_id) ?? null) : null
+    const identity =
+      lead.status === 'verified'
+        ? `email:${lead.normalized_email ?? normalizeEmailValue(lead.email)}`
+        : visit
+          ? getPostEmailIdentityKey({
+              visit,
+              userId: lead.user_id,
+              identityByVisitorId: params.identityByVisitorId,
+            })
+          : getIdentityKey(visitorId, params.identityByVisitorId)
+
+    if (params.visitorIdentities.has(identity)) {
+      identities.add(identity)
     }
   }
 
-  return visitors.size
+  return identities.size
 }
 
 function getLatestQuizResponseByUser(quizResponses: QuizResponseRow[]) {
@@ -444,14 +637,17 @@ function getSpendForVisit(sourceSpend: DashboardRows['adSpendEntries'], visit: V
 
 function buildFunnelRows(params: {
   visits: VisitRow[]
+  funnelEvents: FunnelEventRow[]
   eventMap: Map<string, Set<string>>
   visitById: Map<string, VisitRow>
   quizResponses: QuizResponseRow[]
   emailLeads: EmailLeadRow[]
+  identityByVisitorId: Map<string, string>
   totalSpendCents: number
 }) {
   const acquisitionVisitorIds = getAcquisitionVisitorIds(params.visits, params.eventMap)
-  const visitors = acquisitionVisitorIds.size
+  const acquisitionIdentities = getIdentitySetForVisitorIds(acquisitionVisitorIds, params.identityByVisitorId)
+  const visitors = acquisitionIdentities.size
   let previousUsers: number | null = null
 
   return FUNNEL_STEPS.map((step) => {
@@ -462,26 +658,48 @@ function buildFunnelRows(params: {
     } else if (step.label === 'Quiz Completed') {
       users = countVisitorIdsWithCompletedQuiz({
         quizResponses: params.quizResponses,
-        visitorIds: acquisitionVisitorIds,
+        visitorIdentities: acquisitionIdentities,
+        identityByVisitorId: params.identityByVisitorId,
       })
     } else if (step.label === 'Email Submitted') {
-      users = countVisitorIdsWithEmailLead({
+      users = countStitchedEmailLeadIdentities({
         emailLeads: params.emailLeads,
         visitById: params.visitById,
-        visitorIds: acquisitionVisitorIds,
+        visitorIdentities: acquisitionIdentities,
+        identityByVisitorId: params.identityByVisitorId,
       })
     } else if (step.label === 'Email Verified') {
-      users = countVisitorIdsWithEmailLead({
+      users = countStitchedEmailLeadIdentities({
         emailLeads: params.emailLeads,
         visitById: params.visitById,
-        visitorIds: acquisitionVisitorIds,
+        visitorIdentities: acquisitionIdentities,
+        identityByVisitorId: params.identityByVisitorId,
         status: 'verified',
+      })
+    } else if (step.label === 'Purchase Intent') {
+      users = countStitchedEventIdentities({
+        visits: params.visits,
+        visitById: params.visitById,
+        funnelEvents: params.funnelEvents,
+        visitorIdentities: acquisitionIdentities,
+        eventNames: ['paywall_cta_clicked'],
+        identityByVisitorId: params.identityByVisitorId,
+      })
+    } else if (step.label === 'Result Viewed') {
+      users = countStitchedEventIdentities({
+        visits: params.visits,
+        visitById: params.visitById,
+        funnelEvents: params.funnelEvents,
+        visitorIdentities: acquisitionIdentities,
+        eventNames: ['result_viewed'],
+        identityByVisitorId: params.identityByVisitorId,
       })
     } else {
       users = countVisitorIdsWithAnyEvent({
         visits: params.visits,
         eventMap: params.eventMap,
-        visitorIds: acquisitionVisitorIds,
+        visitorIdentities: acquisitionIdentities,
+        identityByVisitorId: params.identityByVisitorId,
         eventNames: step.eventNames ?? [],
       })
     }
@@ -546,35 +764,45 @@ function buildTrafficNode(params: {
   level: TrafficTreeNode['level']
   label: string
   visits: VisitRow[]
+  funnelEvents: FunnelEventRow[]
   spendCents: number
   eventMap: Map<string, Set<string>>
   visitById: Map<string, VisitRow>
   quizResponses: QuizResponseRow[]
   emailLeads: EmailLeadRow[]
+  identityByVisitorId: Map<string, string>
   children?: TrafficTreeNode[]
 }): TrafficTreeNode {
   const visitorIds = getAcquisitionVisitorIds(params.visits, params.eventMap)
-  const visitors = visitorIds.size
+  const visitIds = new Set(params.visits.map((visit) => visit.id))
+  const visitorIdentities = getIdentitySetForVisitorIds(visitorIds, params.identityByVisitorId)
+  const visitors = visitorIdentities.size
   const quizStarted = countVisitorIdsWithAnyEvent({
     visits: params.visits,
     eventMap: params.eventMap,
-    visitorIds,
+    visitorIdentities,
+    identityByVisitorId: params.identityByVisitorId,
     eventNames: ['quiz_started'],
   })
   const quizCompleted = countVisitorIdsWithCompletedQuiz({
     quizResponses: params.quizResponses,
-    visitorIds,
+    visitorIdentities,
+    identityByVisitorId: params.identityByVisitorId,
   })
-  const emailSubmitted = countVisitorIdsWithEmailLead({
+  const emailSubmitted = countStitchedEmailLeadIdentities({
     emailLeads: params.emailLeads,
     visitById: params.visitById,
-    visitorIds,
+    visitorIdentities,
+    identityByVisitorId: params.identityByVisitorId,
+    allowedVisitIds: visitIds,
   })
-  const purchaseIntent = countVisitorIdsWithAnyEvent({
+  const purchaseIntent = countStitchedEventIdentities({
     visits: params.visits,
-    eventMap: params.eventMap,
-    visitorIds,
+    visitById: params.visitById,
+    funnelEvents: params.funnelEvents,
+    visitorIdentities,
     eventNames: ['paywall_cta_clicked'],
+    identityByVisitorId: params.identityByVisitorId,
   })
 
   return {
@@ -595,10 +823,12 @@ function buildTrafficNode(params: {
 
 function buildTrafficTree(params: {
   visits: VisitRow[]
+  funnelEvents: FunnelEventRow[]
   eventMap: Map<string, Set<string>>
   visitById: Map<string, VisitRow>
   quizResponses: QuizResponseRow[]
   emailLeads: EmailLeadRow[]
+  identityByVisitorId: Map<string, string>
   adSpendEntries: NonNullable<DashboardRows['adSpendEntries']>
 }) {
   const sourceLabels = new Set<string>()
@@ -651,11 +881,13 @@ function buildTrafficTree(params: {
                 level: 'creative',
                 label: creative,
                 visits: creativeVisits,
+                funnelEvents: params.funnelEvents,
                 spendCents: creativeSpendCents,
                 eventMap: params.eventMap,
                 visitById: params.visitById,
                 quizResponses: params.quizResponses,
                 emailLeads: params.emailLeads,
+                identityByVisitorId: params.identityByVisitorId,
               })
             })
             .sort(sortTrafficNodes)
@@ -665,11 +897,13 @@ function buildTrafficTree(params: {
             level: 'campaign',
             label: campaign,
             visits: campaignVisits,
+            funnelEvents: params.funnelEvents,
             spendCents: campaignSpendEntries.reduce((total, entry) => total + entry.spend_cents, 0),
             eventMap: params.eventMap,
             visitById: params.visitById,
             quizResponses: params.quizResponses,
             emailLeads: params.emailLeads,
+            identityByVisitorId: params.identityByVisitorId,
             children: creativeChildren,
           })
         })
@@ -680,11 +914,13 @@ function buildTrafficTree(params: {
         level: 'source',
         label: source,
         visits: sourceVisits,
+        funnelEvents: params.funnelEvents,
         spendCents: sourceSpendEntries.reduce((total, entry) => total + entry.spend_cents, 0),
         eventMap: params.eventMap,
         visitById: params.visitById,
         quizResponses: params.quizResponses,
         emailLeads: params.emailLeads,
+        identityByVisitorId: params.identityByVisitorId,
         children: campaignChildren,
       })
     })
@@ -711,30 +947,45 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   const latestQuizResponseByUser = getLatestQuizResponseByUser(rows.quizResponses)
   const adSpendEntries = rows.adSpendEntries ?? []
   const emailLeads = rows.emailLeads ?? []
+  const authAttempts = rows.authAttempts ?? []
   const productPriceCents = rows.dashboardSettings?.product_price_cents ?? 900
   const currency = rows.dashboardSettings?.currency ?? 'USD'
   const totalSpendCents = getTotalSpendCents(adSpendEntries)
   const acquisitionVisitorIds = getAcquisitionVisitorIds(rows.visits, eventMap)
-  const emailSubmittedActors = countVisitorIdsWithEmailLead({
+  const identityByVisitorId = buildIdentityByVisitorId({
+    visits: rows.visits,
+    quizResponses: rows.quizResponses,
+    userProfiles: rows.userProfiles,
     emailLeads,
+    authAttempts,
     visitById,
-    visitorIds: acquisitionVisitorIds,
   })
-  const emailVerifiedActors = countVisitorIdsWithEmailLead({
+  const acquisitionIdentities = getIdentitySetForVisitorIds(acquisitionVisitorIds, identityByVisitorId)
+  const emailSubmittedActors = countStitchedEmailLeadIdentities({
     emailLeads,
     visitById,
-    visitorIds: acquisitionVisitorIds,
+    visitorIdentities: acquisitionIdentities,
+    identityByVisitorId,
+  })
+  const emailVerifiedActors = countStitchedEmailLeadIdentities({
+    emailLeads,
+    visitById,
+    visitorIdentities: acquisitionIdentities,
+    identityByVisitorId,
     status: 'verified',
   })
-  const purchaseIntentActors = countVisitorIdsWithAnyEvent({
+  const purchaseIntentActors = countStitchedEventIdentities({
     visits: rows.visits,
-    eventMap,
-    visitorIds: acquisitionVisitorIds,
+    visitById,
+    funnelEvents: rows.funnelEvents,
+    visitorIdentities: acquisitionIdentities,
     eventNames: ['paywall_cta_clicked'],
+    identityByVisitorId,
   })
   const quizCompletedVisitors = countVisitorIdsWithCompletedQuiz({
     quizResponses: rows.quizResponses,
-    visitorIds: acquisitionVisitorIds,
+    visitorIdentities: acquisitionIdentities,
+    identityByVisitorId,
   })
   const paywallClickActors = purchaseIntentActors
   const estimatedRevenueCents = purchaseIntentActors * productPriceCents
@@ -989,10 +1240,12 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     ],
     funnelConversion: buildFunnelRows({
       visits: rows.visits,
+      funnelEvents: rows.funnelEvents,
       eventMap,
       visitById,
       quizResponses: rows.quizResponses,
       emailLeads,
+      identityByVisitorId,
       totalSpendCents,
     }),
     sourceBreakdown,
@@ -1001,10 +1254,12 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     sourceByPattern,
     trafficTree: buildTrafficTree({
       visits: rows.visits,
+      funnelEvents: rows.funnelEvents,
       eventMap,
       visitById,
       quizResponses: rows.quizResponses,
       emailLeads,
+      identityByVisitorId,
       adSpendEntries,
     }),
     pendingEmailLeads,

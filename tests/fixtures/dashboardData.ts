@@ -63,11 +63,22 @@ export type DashboardFixture = {
   emailLeads: Array<{
     id: string
     email: string
+    normalized_email?: string | null
     status: string
+    user_id?: string | null
     visitor_id: string | null
     visit_id: string | null
     first_submitted_at: string
     last_submitted_at: string
+  }>
+  authAttempts: Array<{
+    id: string
+    normalized_email: string
+    status: string
+    user_id: string | null
+    visitor_id: string | null
+    visit_id: string | null
+    created_at: string
   }>
   dashboardSettings: {
     product_price_cents: number
@@ -404,11 +415,33 @@ export function buildDashboardFixture(): DashboardFixture {
       {
         id: 'lead_google_first',
         email: 'user.google.repeat@example.com',
+        normalized_email: 'user.google.repeat@example.com',
         status: 'verified',
+        user_id: 'user_google_repeat',
         visitor_id: 'visitor_google_first',
         visit_id: 'visit_google_first',
         first_submitted_at: '2026-06-01T09:01:10.000Z',
         last_submitted_at: '2026-06-01T09:01:10.000Z',
+      },
+    ],
+    authAttempts: [
+      {
+        id: 'attempt_google_first',
+        normalized_email: 'user.google.repeat@example.com',
+        status: 'verified',
+        user_id: 'user_google_repeat',
+        visitor_id: 'visitor_google_first',
+        visit_id: 'visit_google_first',
+        created_at: '2026-06-01T09:01:10.000Z',
+      },
+      {
+        id: 'attempt_facebook_return',
+        normalized_email: 'user.google.repeat@example.com',
+        status: 'verified',
+        user_id: 'user_google_repeat',
+        visitor_id: 'visitor_facebook_return',
+        visit_id: 'visit_facebook_return',
+        created_at: '2026-06-02T09:01:00.000Z',
       },
     ],
     dashboardSettings: {

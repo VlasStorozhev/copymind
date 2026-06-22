@@ -15,6 +15,7 @@ describe('DashboardPage', () => {
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
       emailLeads: fixture.emailLeads,
+      authAttempts: fixture.authAttempts,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -37,6 +38,7 @@ describe('DashboardPage', () => {
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
       emailLeads: fixture.emailLeads,
+      authAttempts: fixture.authAttempts,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -82,6 +84,7 @@ describe('DashboardPage', () => {
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
       emailLeads: fixture.emailLeads,
+      authAttempts: fixture.authAttempts,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -112,6 +115,7 @@ describe('DashboardPage', () => {
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
       emailLeads: fixture.emailLeads,
+      authAttempts: fixture.authAttempts,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })

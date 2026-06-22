@@ -18,11 +18,11 @@ describe('buildDashboardSummary', () => {
   it('builds business metrics and one end-to-end validation funnel', () => {
     expect(summary.businessMetrics).toEqual([
       { label: 'Ad Spend', value: '$150.00' },
-      { label: 'Intent Revenue', value: '$18.00', description: 'Purchase intent × $9.00' },
-      { label: 'Intent Profit', value: '-$132.00' },
-      { label: 'ROAS', value: '0.12x' },
-      { label: 'Intent CPA', value: '$75.00', description: 'Spend / purchase intent' },
-      { label: 'Purchase Intent', value: '2', description: 'Unique users who clicked the paywall CTA' },
+      { label: 'Intent Revenue', value: '$9.00', description: 'Purchase intent × $9.00' },
+      { label: 'Intent Profit', value: '-$141.00' },
+      { label: 'ROAS', value: '0.06x' },
+      { label: 'Intent CPA', value: '$150.00', description: 'Spend / purchase intent' },
+      { label: 'Purchase Intent', value: '1', description: 'Unique users who clicked the paywall CTA' },
       { label: 'Email Submitted', value: '1' },
       { label: 'Email Verified', value: '1' },
       { label: 'Verification Rate', value: '100%', description: 'Email verified / email submitted' },
@@ -31,52 +31,52 @@ describe('buildDashboardSummary', () => {
     expect(summary.funnelConversion).toEqual([
       {
         step: 'Visitors',
-        users: 3,
+        users: 2,
         conversionFromPrevious: null,
         conversionFromVisitors: 1,
-        costPerUserCents: 5000,
-      },
-      {
-        step: 'Quiz Started',
-        users: 2,
-        conversionFromPrevious: 2 / 3,
-        conversionFromVisitors: 2 / 3,
         costPerUserCents: 7500,
       },
       {
+        step: 'Quiz Started',
+        users: 1,
+        conversionFromPrevious: 0.5,
+        conversionFromVisitors: 0.5,
+        costPerUserCents: 15000,
+      },
+      {
         step: 'Quiz Completed',
-        users: 3,
-        conversionFromPrevious: 1.5,
+        users: 2,
+        conversionFromPrevious: 2,
         conversionFromVisitors: 1,
-        costPerUserCents: 5000,
+        costPerUserCents: 7500,
       },
       {
         step: 'Email Submitted',
         users: 1,
-        conversionFromPrevious: 1 / 3,
-        conversionFromVisitors: 1 / 3,
+        conversionFromPrevious: 0.5,
+        conversionFromVisitors: 0.5,
         costPerUserCents: 15000,
       },
       {
         step: 'Email Verified',
         users: 1,
         conversionFromPrevious: 1,
-        conversionFromVisitors: 1 / 3,
+        conversionFromVisitors: 0.5,
         costPerUserCents: 15000,
       },
       {
         step: 'Result Viewed',
-        users: 2,
-        conversionFromPrevious: 2,
-        conversionFromVisitors: 2 / 3,
-        costPerUserCents: 7500,
+        users: 1,
+        conversionFromPrevious: 1,
+        conversionFromVisitors: 0.5,
+        costPerUserCents: 15000,
       },
       {
         step: 'Purchase Intent',
-        users: 2,
+        users: 1,
         conversionFromPrevious: 1,
-        conversionFromVisitors: 2 / 3,
-        costPerUserCents: 7500,
+        conversionFromVisitors: 0.5,
+        costPerUserCents: 15000,
       },
     ])
   })
@@ -202,13 +202,13 @@ describe('buildDashboardSummary', () => {
     })
 
     expect(summaryWithDirectQuizAndUtilityPage.funnelConversion.map((row) => [row.step, row.users])).toEqual([
-      ['Visitors', 4],
-      ['Quiz Started', 3],
-      ['Quiz Completed', 4],
+      ['Visitors', 3],
+      ['Quiz Started', 2],
+      ['Quiz Completed', 3],
       ['Email Submitted', 2],
       ['Email Verified', 1],
-      ['Result Viewed', 3],
-      ['Purchase Intent', 3],
+      ['Result Viewed', 2],
+      ['Purchase Intent', 2],
     ])
 
     expect(summaryWithDirectQuizAndUtilityPage.trafficTree.find((node) => node.label === 'tiktok')).toMatchObject({
@@ -231,11 +231,11 @@ describe('buildDashboardSummary', () => {
     expect(summary.summaryMetrics).toEqual([
       { label: 'Total visits', value: 3 },
       { label: 'Anonymous visitors', value: 2 },
-      { label: 'Quiz completed', value: 3 },
+      { label: 'Quiz completed', value: 2 },
       { label: 'Emails submitted', value: 1 },
       { label: 'Registered users', value: 1 },
       { label: 'Repeat quiz users', value: 0 },
-      { label: 'Buy intents', value: 2 },
+      { label: 'Buy intents', value: 1 },
     ])
 
     expect(summary.sourceBreakdown).toEqual([
@@ -406,6 +406,7 @@ describe('buildDashboardSummary', () => {
       ],
       userProfiles: fixture.userProfiles,
       emailLeads: fixture.emailLeads,
+      authAttempts: fixture.authAttempts,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -413,16 +414,16 @@ describe('buildDashboardSummary', () => {
     expect(summaryWithRepeatUser.summaryMetrics).toEqual(
       expect.arrayContaining([
         { label: 'Total visits', value: 4 },
-        { label: 'Quiz completed', value: 3 },
+        { label: 'Quiz completed', value: 2 },
         { label: 'Repeat quiz users', value: 1 },
-        { label: 'Buy intents', value: 3 },
+        { label: 'Buy intents', value: 1 },
       ]),
     )
     expect(summaryWithRepeatUser.businessMetrics).toEqual(
       expect.arrayContaining([
-        { label: 'Intent Revenue', value: '$27.00', description: 'Purchase intent × $9.00' },
-        { label: 'Intent CPA', value: '$50.00', description: 'Spend / purchase intent' },
-        { label: 'Purchase Intent', value: '3', description: 'Unique users who clicked the paywall CTA' },
+        { label: 'Intent Revenue', value: '$9.00', description: 'Purchase intent × $9.00' },
+        { label: 'Intent CPA', value: '$150.00', description: 'Spend / purchase intent' },
+        { label: 'Purchase Intent', value: '1', description: 'Unique users who clicked the paywall CTA' },
       ]),
     )
   })
