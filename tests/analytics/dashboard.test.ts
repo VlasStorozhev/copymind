@@ -23,9 +23,6 @@ describe('buildDashboardSummary', () => {
       { label: 'ROAS', value: '0.06x' },
       { label: 'Intent CPA', value: '$150.00', description: 'Spend / purchase intent' },
       { label: 'Purchase Intent', value: '1', description: 'Unique users who clicked the paywall CTA' },
-      { label: 'Email Submitted', value: '1' },
-      { label: 'Email Verified', value: '1' },
-      { label: 'Verification Rate', value: '100%', description: 'Email verified / email submitted' },
     ])
 
     expect(summary.funnelConversion).toEqual([
@@ -78,6 +75,44 @@ describe('buildDashboardSummary', () => {
         conversionFromVisitors: 0.5,
         costPerUserCents: 15000,
       },
+    ])
+  })
+
+  it('keeps the funnel people-based when a visitor submits one email and verifies another', () => {
+    const summaryWithChangedLoginEmail = buildDashboardSummary({
+      visits: fixture.visits,
+      funnelEvents: fixture.funnelEvents,
+      quizResponses: fixture.quizResponses,
+      userProfiles: fixture.userProfiles,
+      emailLeads: [
+        ...fixture.emailLeads,
+        {
+          id: 'lead_google_pending_alias',
+          email: 'pending.alias@example.com',
+          normalized_email: 'pending.alias@example.com',
+          status: 'pending_verification',
+          user_id: null,
+          visitor_id: 'visitor_google_first',
+          visit_id: 'visit_google_first',
+          first_submitted_at: '2026-06-01T09:02:10.000Z',
+          last_submitted_at: '2026-06-01T09:02:10.000Z',
+        },
+      ],
+      dashboardSettings: fixture.dashboardSettings,
+      adSpendEntries: fixture.adSpendEntries,
+    })
+
+    expect(summaryWithChangedLoginEmail.businessMetrics.map((metric) => metric.label)).not.toEqual(
+      expect.arrayContaining(['Email Submitted', 'Email Verified', 'Verification Rate']),
+    )
+
+    expect(summaryWithChangedLoginEmail.funnelConversion.map((row) => [row.step, row.users])).toContainEqual([
+      'Email Submitted',
+      1,
+    ])
+    expect(summaryWithChangedLoginEmail.funnelConversion.map((row) => [row.step, row.users])).toContainEqual([
+      'Email Verified',
+      1,
     ])
   })
 
@@ -232,7 +267,6 @@ describe('buildDashboardSummary', () => {
       { label: 'Total visits', value: 3 },
       { label: 'Anonymous visitors', value: 2 },
       { label: 'Quiz completed', value: 2 },
-      { label: 'Emails submitted', value: 1 },
       { label: 'Registered users', value: 1 },
       { label: 'Repeat quiz users', value: 0 },
       { label: 'Buy intents', value: 1 },

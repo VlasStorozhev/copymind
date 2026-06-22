@@ -614,14 +614,6 @@ function formatRoas(value: number | null) {
   return `${value.toFixed(2)}x`
 }
 
-function formatPercent(value: number | null) {
-  if (value === null) {
-    return '—'
-  }
-
-  return `${Math.round(value * 100)}%`
-}
-
 function getTotalSpendCents(adSpendEntries: DashboardRows['adSpendEntries']) {
   return (adSpendEntries ?? []).reduce((total, entry) => total + entry.spend_cents, 0)
 }
@@ -961,19 +953,6 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     visitById,
   })
   const acquisitionIdentities = getIdentitySetForVisitorIds(acquisitionVisitorIds, identityByVisitorId)
-  const emailSubmittedActors = countStitchedEmailLeadIdentities({
-    emailLeads,
-    visitById,
-    visitorIdentities: acquisitionIdentities,
-    identityByVisitorId,
-  })
-  const emailVerifiedActors = countStitchedEmailLeadIdentities({
-    emailLeads,
-    visitById,
-    visitorIdentities: acquisitionIdentities,
-    identityByVisitorId,
-    status: 'verified',
-  })
   const purchaseIntentActors = countStitchedEventIdentities({
     visits: rows.visits,
     visitById,
@@ -1212,13 +1191,6 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
         value: String(purchaseIntentActors),
         description: 'Unique users who clicked the paywall CTA',
       },
-      { label: 'Email Submitted', value: String(emailSubmittedActors) },
-      { label: 'Email Verified', value: String(emailVerifiedActors) },
-      {
-        label: 'Verification Rate',
-        value: formatPercent(divide(emailVerifiedActors, emailSubmittedActors)),
-        description: 'Email verified / email submitted',
-      },
     ],
     summaryMetrics: [
       { label: 'Total visits', value: rows.visits.length },
@@ -1226,10 +1198,6 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       {
         label: 'Quiz completed',
         value: quizCompletedVisitors,
-      },
-      {
-        label: 'Emails submitted',
-        value: emailSubmittedActors,
       },
       { label: 'Registered users', value: rows.userProfiles.length },
       { label: 'Repeat quiz users', value: countRepeatQuizUsers(rows.quizResponses) },
