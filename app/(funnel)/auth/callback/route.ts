@@ -132,69 +132,181 @@ function buildAuthAttemptRepo(client: ReturnType<typeof createAdminClient>): Aut
 }
 
 function buildProfileRepo(client: ReturnType<typeof createAdminClient>): UserProfileRepository {
+  const profileSelectWithContent =
+    'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, first_touch_content, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, last_touch_content, created_at, updated_at'
+  const profileSelectLegacy =
+    'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, created_at, updated_at'
+  const withContentDefaults = (profile: Record<string, unknown> | null) =>
+    profile
+      ? {
+          ...profile,
+          first_touch_content: profile.first_touch_content ?? null,
+          last_touch_content: profile.last_touch_content ?? null,
+        }
+      : null
+
   return {
     async getProfileByUserId(userId) {
-      const { data } = await client
+      const withContent = await client
         .from('user_profiles')
-        .select('id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, created_at, updated_at')
+        .select(profileSelectWithContent)
         .eq('user_id', userId)
         .maybeSingle()
 
-      return data ?? null
+      if (!withContent.error) {
+        return (withContent.data ?? null) as UserProfileRecord | null
+      }
+
+      const legacy = await client.from('user_profiles').select(profileSelectLegacy).eq('user_id', userId).maybeSingle()
+
+      return withContentDefaults(legacy.data ?? null) as UserProfileRecord | null
     },
     async insertProfile(input) {
-      const { data, error } = await client
+      const profileInsert = {
+        user_id: input.userId,
+        email: input.email,
+        email_verified_at: input.emailVerifiedAt ?? null,
+        first_authenticated_at: input.firstAuthenticatedAt,
+        first_touch_source: input.firstTouchSource,
+        first_touch_medium: input.firstTouchMedium,
+        first_touch_campaign: input.firstTouchCampaign,
+        first_touch_content: input.firstTouchContent,
+        last_seen_at: input.lastSeenAt,
+        last_touch_source: input.lastTouchSource,
+        last_touch_medium: input.lastTouchMedium,
+        last_touch_campaign: input.lastTouchCampaign,
+        last_touch_content: input.lastTouchContent,
+        created_at: input.createdAt,
+        updated_at: input.updatedAt,
+      }
+      const withContent = await client
         .from('user_profiles')
-        .insert({
-          user_id: input.userId,
-          email: input.email,
-          email_verified_at: input.emailVerifiedAt ?? null,
-          first_authenticated_at: input.firstAuthenticatedAt,
-          first_touch_source: input.firstTouchSource,
-          first_touch_medium: input.firstTouchMedium,
-          first_touch_campaign: input.firstTouchCampaign,
-          last_seen_at: input.lastSeenAt,
-          last_touch_source: input.lastTouchSource,
-          last_touch_medium: input.lastTouchMedium,
-          last_touch_campaign: input.lastTouchCampaign,
-          created_at: input.createdAt,
-          updated_at: input.updatedAt,
-        })
-        .select('id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, created_at, updated_at')
+        .insert(profileInsert)
+        .select(profileSelectWithContent)
         .single()
 
-      if (error || !data) {
-        throw new Error(error?.message ?? 'Could not create user profile')
+      if (!withContent.error && withContent.data) {
+        return withContent.data as UserProfileRecord
       }
 
-      return data as UserProfileRecord
+      const legacyInsert = {
+        user_id: profileInsert.user_id,
+        email: profileInsert.email,
+        email_verified_at: profileInsert.email_verified_at,
+        first_authenticated_at: profileInsert.first_authenticated_at,
+        first_touch_source: profileInsert.first_touch_source,
+        first_touch_medium: profileInsert.first_touch_medium,
+        first_touch_campaign: profileInsert.first_touch_campaign,
+        last_seen_at: profileInsert.last_seen_at,
+        last_touch_source: profileInsert.last_touch_source,
+        last_touch_medium: profileInsert.last_touch_medium,
+        last_touch_campaign: profileInsert.last_touch_campaign,
+        created_at: profileInsert.created_at,
+        updated_at: profileInsert.updated_at,
+      }
+      const legacy = await client.from('user_profiles').insert(legacyInsert).select(profileSelectLegacy).single()
+
+      if (legacy.error || !legacy.data) {
+        throw new Error(legacy.error?.message ?? 'Could not create user profile')
+      }
+
+      return withContentDefaults(legacy.data) as UserProfileRecord
     },
     async updateProfile(userId, input) {
-      const { data, error } = await client
+      const profileUpdate = {
+        email: input.email,
+        email_verified_at: input.emailVerifiedAt,
+        first_authenticated_at: input.firstAuthenticatedAt,
+        first_touch_source: input.firstTouchSource,
+        first_touch_medium: input.firstTouchMedium,
+        first_touch_campaign: input.firstTouchCampaign,
+        first_touch_content: input.firstTouchContent,
+        last_seen_at: input.lastSeenAt,
+        last_touch_source: input.lastTouchSource,
+        last_touch_medium: input.lastTouchMedium,
+        last_touch_campaign: input.lastTouchCampaign,
+        last_touch_content: input.lastTouchContent,
+        updated_at: input.updatedAt,
+      }
+      const withContent = await client
         .from('user_profiles')
-        .update({
-          email: input.email,
-          email_verified_at: input.emailVerifiedAt,
-          first_authenticated_at: input.firstAuthenticatedAt,
-          first_touch_source: input.firstTouchSource,
-          first_touch_medium: input.firstTouchMedium,
-          first_touch_campaign: input.firstTouchCampaign,
-          last_seen_at: input.lastSeenAt,
-          last_touch_source: input.lastTouchSource,
-          last_touch_medium: input.lastTouchMedium,
-          last_touch_campaign: input.lastTouchCampaign,
-          updated_at: input.updatedAt,
-        })
+        .update(profileUpdate)
         .eq('user_id', userId)
-        .select('id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, created_at, updated_at')
+        .select(profileSelectWithContent)
         .single()
 
-      if (error || !data) {
-        throw new Error(error?.message ?? 'Could not update user profile')
+      if (!withContent.error && withContent.data) {
+        return withContent.data as UserProfileRecord
       }
 
-      return data as UserProfileRecord
+      const legacyUpdate = {
+        email: profileUpdate.email,
+        email_verified_at: profileUpdate.email_verified_at,
+        first_authenticated_at: profileUpdate.first_authenticated_at,
+        first_touch_source: profileUpdate.first_touch_source,
+        first_touch_medium: profileUpdate.first_touch_medium,
+        first_touch_campaign: profileUpdate.first_touch_campaign,
+        last_seen_at: profileUpdate.last_seen_at,
+        last_touch_source: profileUpdate.last_touch_source,
+        last_touch_medium: profileUpdate.last_touch_medium,
+        last_touch_campaign: profileUpdate.last_touch_campaign,
+        updated_at: profileUpdate.updated_at,
+      }
+      const legacy = await client
+        .from('user_profiles')
+        .update(legacyUpdate)
+        .eq('user_id', userId)
+        .select(profileSelectLegacy)
+        .single()
+
+      if (legacy.error || !legacy.data) {
+        throw new Error(legacy.error?.message ?? 'Could not update user profile')
+      }
+
+      return withContentDefaults(legacy.data) as UserProfileRecord
     },
+  }
+}
+
+async function loadLatestVisitForCallback(client: ReturnType<typeof createAdminClient>, visitorId: string) {
+  const withContent = await client
+    .from('visits')
+    .select('id, visitor_id, source, medium, campaign, content, landing_url, referrer, user_id, created_at, updated_at')
+    .eq('visitor_id', visitorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const legacy = await client
+    .from('visits')
+    .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
+    .eq('visitor_id', visitorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  return {
+    ...legacy,
+    data: legacy.data ? { ...legacy.data, content: null } : null,
+  }
+}
+
+async function loadAttemptVisitSource(client: ReturnType<typeof createAdminClient>, visitId: string) {
+  const withContent = await client.from('visits').select('source, medium, campaign, content').eq('id', visitId).maybeSingle()
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const legacy = await client.from('visits').select('source, medium, campaign').eq('id', visitId).maybeSingle()
+
+  return {
+    ...legacy,
+    data: legacy.data ? { ...legacy.data, content: null } : null,
   }
 }
 
@@ -227,23 +339,16 @@ export async function GET(request: Request) {
   const profileRepo = buildProfileRepo(adminClient)
 
   const visitorId = cookieStore.get('visitor_id')?.value ?? null
-  const latestVisit = visitorId
-    ? await adminClient
-        .from('visits')
-        .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
-        .eq('visitor_id', visitorId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-    : { data: null }
+  const latestVisit = visitorId ? await loadLatestVisitForCallback(adminClient, visitorId) : { data: null }
 
   const fallbackSource = latestVisit.data
     ? {
         source: latestVisit.data.source,
         medium: latestVisit.data.medium,
         campaign: latestVisit.data.campaign,
+        content: latestVisit.data.content,
       }
-    : { source: 'direct', medium: null, campaign: null }
+    : { source: 'direct', medium: null, campaign: null, content: null }
 
   if (!authAttemptId) {
     if (latestVisit.data) {
@@ -265,19 +370,14 @@ export async function GET(request: Request) {
   }
 
   const attempt = await authAttemptRepo.getAttemptById(authAttemptId)
-  const attemptVisit = attempt?.visit_id
-    ? await adminClient
-        .from('visits')
-        .select('source, medium, campaign')
-        .eq('id', attempt.visit_id)
-        .maybeSingle()
-    : { data: null }
+  const attemptVisit = attempt?.visit_id ? await loadAttemptVisitSource(adminClient, attempt.visit_id) : { data: null }
   const source = resolveCallbackSource({
     attemptVisitSource: attemptVisit.data
       ? {
           source: attemptVisit.data.source,
           medium: attemptVisit.data.medium,
           campaign: attemptVisit.data.campaign,
+          content: attemptVisit.data.content,
         }
       : null,
     fallbackSource,

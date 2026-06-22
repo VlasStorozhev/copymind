@@ -42,36 +42,28 @@ Primary funnel reporting should use visit-level deduplication unless a metric ex
 - `landing views`: unique visits with `landing_viewed`.
 - `assessment starts`: unique visits with `start_clicked`.
 - `quiz completions`: unique visits with `quiz_completed`.
-- `email submissions`: unique anonymous acquisition visits with successful `email_submitted`.
-- `magic links sent`: unique anonymous acquisition visits with `magic_link_sent`.
-- `magic links verified`: unique anonymous acquisition visits with `magic_link_verified`.
+- `email submissions`: unique visits with successful `email_submitted`.
+- `magic links sent`: unique visits with `magic_link_sent`.
+- `magic links verified`: unique visits with `magic_link_verified`.
 - `result views`: unique visits with `result_viewed`.
 - `paywall views`: unique visits where the mock paywall section was displayed on `/app` and `paywall_viewed` was tracked.
-- `paywall CTA clicks`: unique visits with `paywall_cta_clicked`.
+- `paywall CTA clicks`: unique visits with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
 - `new users`: unique Supabase Auth users first verified in the selected period.
 - `returning users`: unique Supabase Auth users that already existed before the selected visit.
 
-Conversion rates should use the previous step in the relevant flow as the denominator. Email and magic-link steps apply only to anonymous acquisition visits, because authenticated users intentionally skip email capture when a valid session already exists.
+Conversion rates should use the previous step in the single end-to-end validation funnel as the denominator. Authenticated users can skip email capture by design, so the main dashboard may show jumps above 100% at downstream steps when repeat users re-enter after authentication; this is acceptable for MVP diagnosis and should be interpreted with the all-time traffic mix.
 
-Anonymous acquisition conversion should use this sequence:
+The primary conversion dashboard should use this sequence:
 
 - landing view -> start clicked
 - start clicked -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> magic link sent
-- magic link sent -> magic link verified
+- email submitted -> magic link verified
 - magic link verified -> result viewed
 - result viewed -> mock paywall section viewed
 - paywall viewed -> paywall CTA clicked
 
-Authenticated repeat-quiz conversion should use this sequence:
-
-- quiz started -> quiz completed
-- quiz completed -> result viewed
-- result viewed -> mock paywall section viewed
-- paywall viewed -> paywall CTA clicked
-
-For authenticated repeat quiz reporting, `quiz_started` is the denominator for the first conversion step. Authenticated repeat quiz runs must not be counted as drop-offs at `email_submitted`, `magic_link_sent`, or `magic_link_verified`, because those steps are skipped by design.
+Authenticated repeat-quiz conversion can be used as a secondary diagnostic, but it should not appear as a separate primary dashboard funnel.
 
 Raw event counts can be shown as a secondary diagnostic, but they should not be used as the primary conversion denominator because reloads and revisits can inflate page-view events.
 

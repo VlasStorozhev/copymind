@@ -2,6 +2,7 @@ export type SourceDetectionResult = {
   source: string;
   medium: string | null;
   campaign: string | null;
+  content: string | null;
   landingUrl: string;
   referrer: string;
 };
@@ -41,12 +42,14 @@ export function detectSource(input: {
     const utmSource = parsedUrl.searchParams.get('utm_source');
     const utmMedium = parsedUrl.searchParams.get('utm_medium');
     const utmCampaign = parsedUrl.searchParams.get('utm_campaign');
+    const utmContent = parsedUrl.searchParams.get('utm_content');
 
     if (utmSource) {
       return {
         source: utmSource,
         medium: utmMedium,
         campaign: utmCampaign,
+        content: utmContent,
         landingUrl,
         referrer,
       };
@@ -61,6 +64,7 @@ export function detectSource(input: {
       source: referrerHost,
       medium: null,
       campaign: null,
+      content: null,
       landingUrl,
       referrer,
     };
@@ -70,6 +74,7 @@ export function detectSource(input: {
     source: 'direct',
     medium: null,
     campaign: null,
+    content: null,
     landingUrl,
     referrer,
   };

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 
 import { DashboardPage } from '@/components/dashboard/dashboard-page'
@@ -19,15 +19,13 @@ export function DashboardShell() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  useEffect(() => {
-    let active = true
-
-    async function loadDashboard() {
+  const loadDashboard = useCallback(
+    async (options?: { active?: () => boolean }) => {
       const response = await fetch('/api/dashboard/summary', {
         credentials: 'same-origin',
       })
 
-      if (!active) {
+      if (options?.active && !options.active()) {
         return
       }
 
@@ -50,9 +48,14 @@ export function DashboardShell() {
       setSummary(payload.summary)
       setUserEmail(payload.user_email)
       setStatus('ready')
-    }
+    },
+    [],
+  )
 
-    void loadDashboard().catch(() => {
+  useEffect(() => {
+    let active = true
+
+    void loadDashboard({ active: () => active }).catch(() => {
       if (active) {
         setStatus('error')
       }
@@ -61,10 +64,10 @@ export function DashboardShell() {
     return () => {
       active = false
     }
-  }, [])
+  }, [loadDashboard])
 
   if (status === 'ready' && summary) {
-    return <DashboardPage summary={summary} userEmail={userEmail} />
+    return <DashboardPage summary={summary} userEmail={userEmail} onDashboardUpdated={loadDashboard} />
   }
 
   return (

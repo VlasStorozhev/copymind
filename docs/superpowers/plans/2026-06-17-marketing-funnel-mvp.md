@@ -970,11 +970,20 @@ Expected return shape:
 
 ```ts
 type DashboardSummary = {
-  summaryMetrics: Array<{ label: string; value: number; description?: string }>;
-  anonymousConversion: Array<{ step: string; visits: number; conversionRate: number | null }>;
-  repeatQuizConversion: Array<{ step: string; visits: number; conversionRate: number | null }>;
+  businessMetrics: Array<{ label: string; value: string; description?: string }>;
+  funnelConversion: Array<{
+    step: string;
+    users: number;
+    conversionFromPrevious: number | null;
+    conversionFromLanding: number | null;
+    costPerUserCents: number | null;
+  }>;
   sourceBreakdown: Array<{
     source: string;
+    medium: string | null;
+    campaign: string | null;
+    content: string | null;
+    spendCents: number;
     visits: number;
     quizCompletions: number;
     emailSubmissions: number;
@@ -1089,9 +1098,10 @@ Rules:
 Return:
 
 - `summaryMetrics`
-- `anonymousConversion`
-- `repeatQuizConversion`
+- `businessMetrics`
+- `funnelConversion`
 - `sourceBreakdown`
+- `trafficBreakdown`
 - `registeredUsers`
 - `patternBreakdown`
 - `sourceByPattern`

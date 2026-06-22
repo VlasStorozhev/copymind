@@ -17,6 +17,7 @@ export type MagicLinkCallbackSource = {
   source: string
   medium: string | null
   campaign: string | null
+  content?: string | null
 }
 
 export type MagicLinkCallbackResult =

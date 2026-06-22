@@ -3,8 +3,8 @@
 The dashboard should answer three questions:
 
 1. How well does the funnel convert?
-2. Which sources bring valuable users?
-3. Which decision patterns are most common and most likely to convert?
+2. Does paid traffic create enough purchase intent to keep validating the product?
+3. Which sources, campaigns, and creatives bring valuable users?
 
 UI:
 
@@ -26,7 +26,18 @@ Access entry points:
 
 ### Funnel Metrics
 
-Core metrics:
+Business metrics:
+
+- ad spend
+- estimated revenue
+- estimated profit
+- ROAS
+- intent CPA
+- paywall CTA clicks
+
+For the MVP, `paywall_cta_clicked` is the primary North Star because checkout is not connected yet. Estimated revenue should use `paywall_cta_clicked * editable product price`.
+
+Core funnel metrics:
 
 - landing views
 - assessment starts
@@ -41,41 +52,48 @@ Core metrics:
 - new users
 - returning users
 
-Anonymous acquisition conversion table:
+Single end-to-end conversion table:
 
 - landing view -> start clicked
 - start clicked -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> magic link sent
-- magic link sent -> magic link verified
+- email submitted -> magic link verified
 - magic link verified -> result viewed
 - result viewed -> mock paywall section viewed
 - paywall viewed -> paywall CTA clicked
 
-Authenticated repeat-quiz conversion table:
+The main dashboard must not split the primary funnel into anonymous and authenticated tables. Authenticated repeat behavior can remain a secondary diagnostic if needed, but it should not compete with the end-to-end validation funnel.
 
-- quiz started -> quiz completed
-- quiz completed -> result viewed
-- result viewed -> mock paywall section viewed
-- paywall viewed -> paywall CTA clicked
+### Business Inputs
 
-For authenticated repeat quiz reporting, `quiz_started` is the denominator for the first conversion step. Authenticated repeat quiz runs intentionally skip email capture and magic-link verification. The dashboard must not report missing email or magic-link events as drop-off for those runs.
+Admin users should be able to edit:
+
+- product price
+- ad spend by `utm_source`
+- ad spend by `utm_medium`
+- ad spend by `utm_campaign`
+- ad spend by `utm_content`
+
+The MVP dashboard period is all-time.
 
 ### Source Attribution
 
 Source breakdown:
 
 - source
+- medium
+- campaign
+- content
+- spend
 - visits
 - quiz completions
 - email submissions
-- magic links sent
-- magic links verified
 - mock paywall section views
 - paywall CTA clicks
 - conversion rates
+- cost per paywall CTA click
 
-For anonymous acquisition reporting, source conversion can include email submissions and magic-link verification. For authenticated repeat-quiz reporting, source conversion should use visit source plus quiz completion, result view, mock paywall view, and paywall CTA click metrics.
+Traffic breakdown should prioritize source, campaign, and creative (`utm_content`) rows that explain where spend is producing purchase intent.
 
 The dashboard should distinguish visit-source reporting from user-source reporting:
 
@@ -92,9 +110,11 @@ Required columns:
 - first touch source
 - first touch medium
 - first touch campaign
+- first touch creative
 - last touch source
 - last touch medium
 - last touch campaign
+- last touch creative
 - decision pattern
 - first authenticated
 - last seen

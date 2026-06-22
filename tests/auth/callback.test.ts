@@ -99,10 +99,12 @@ function createProfileRepositoryFixture(initialProfiles: UserProfileRecord[] = [
         first_touch_source: input.firstTouchSource,
         first_touch_medium: input.firstTouchMedium,
         first_touch_campaign: input.firstTouchCampaign,
+        first_touch_content: input.firstTouchContent,
         last_seen_at: input.lastSeenAt,
         last_touch_source: input.lastTouchSource,
         last_touch_medium: input.lastTouchMedium,
         last_touch_campaign: input.lastTouchCampaign,
+        last_touch_content: input.lastTouchContent,
         created_at: input.createdAt ?? '2026-01-01T00:00:00.000Z',
         updated_at: input.updatedAt ?? '2026-01-01T00:00:00.000Z',
       }

@@ -5,7 +5,7 @@ import { detectSource } from '@/lib/analytics/source';
 describe('detectSource', () => {
   it('prefers utm_source', () => {
     const result = detectSource({
-      url: 'https://example.com/?utm_source=google&utm_medium=cpc&utm_campaign=launch',
+      url: 'https://example.com/?utm_source=google&utm_medium=cpc&utm_campaign=launch&utm_content=hero-a',
       referrer: 'https://referrer.example.com/path',
     });
 
@@ -13,7 +13,8 @@ describe('detectSource', () => {
       source: 'google',
       medium: 'cpc',
       campaign: 'launch',
-      landingUrl: 'https://example.com/?utm_source=google&utm_medium=cpc&utm_campaign=launch',
+      content: 'hero-a',
+      landingUrl: 'https://example.com/?utm_source=google&utm_medium=cpc&utm_campaign=launch&utm_content=hero-a',
       referrer: 'https://referrer.example.com/path',
     });
   });
@@ -28,6 +29,7 @@ describe('detectSource', () => {
       source: 'facebook.com',
       medium: null,
       campaign: null,
+      content: null,
       landingUrl: 'https://example.com/pricing',
       referrer: 'https://www.facebook.com/some/path',
     });
@@ -43,6 +45,7 @@ describe('detectSource', () => {
       source: 'direct',
       medium: null,
       campaign: null,
+      content: null,
       landingUrl: 'https://example.com/',
       referrer: '',
     });
@@ -65,6 +68,7 @@ describe('detectSource', () => {
         source: 'direct',
         medium: null,
         campaign: null,
+        content: null,
         referrer,
       });
     }

@@ -7,10 +7,12 @@ export type UserProfileRecord = {
   first_touch_source: string | null;
   first_touch_medium: string | null;
   first_touch_campaign: string | null;
+  first_touch_content: string | null;
   last_seen_at: string;
   last_touch_source: string | null;
   last_touch_medium: string | null;
   last_touch_campaign: string | null;
+  last_touch_content: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -25,10 +27,12 @@ export type UserProfileRepository = {
     firstTouchSource: string | null;
     firstTouchMedium: string | null;
     firstTouchCampaign: string | null;
+    firstTouchContent: string | null;
     lastSeenAt: string;
     lastTouchSource: string | null;
     lastTouchMedium: string | null;
     lastTouchCampaign: string | null;
+    lastTouchContent: string | null;
     createdAt?: string;
     updatedAt?: string;
   }): Promise<UserProfileRecord>;
@@ -41,10 +45,12 @@ export type UserProfileRepository = {
       firstTouchSource: string | null;
       firstTouchMedium: string | null;
       firstTouchCampaign: string | null;
+      firstTouchContent: string | null;
       lastSeenAt: string;
       lastTouchSource: string | null;
       lastTouchMedium: string | null;
       lastTouchCampaign: string | null;
+      lastTouchContent: string | null;
       updatedAt: string;
     }>,
   ): Promise<UserProfileRecord>;
@@ -63,6 +69,7 @@ export function upsertUserProfileAfterAuth(input: {
     source: string;
     medium: string | null;
     campaign: string | null;
+    content?: string | null;
   };
 }): Promise<UserProfileRecord> {
   const normalizedEmail = normalizeEmail(input.email);
@@ -77,10 +84,12 @@ export function upsertUserProfileAfterAuth(input: {
         firstTouchSource: input.source.source,
         firstTouchMedium: input.source.medium,
         firstTouchCampaign: input.source.campaign,
+        firstTouchContent: input.source.content ?? null,
         lastSeenAt: input.authenticatedAt,
         lastTouchSource: input.source.source,
         lastTouchMedium: input.source.medium,
         lastTouchCampaign: input.source.campaign,
+        lastTouchContent: input.source.content ?? null,
       });
     }
 
@@ -91,6 +100,7 @@ export function upsertUserProfileAfterAuth(input: {
       lastTouchSource: input.source.source,
       lastTouchMedium: input.source.medium,
       lastTouchCampaign: input.source.campaign,
+      lastTouchContent: input.source.content ?? null,
       updatedAt: input.authenticatedAt,
     });
   });

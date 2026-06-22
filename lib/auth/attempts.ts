@@ -273,6 +273,7 @@ export function verifyAuthAttemptAndUpsertProfile(input: {
     source: string;
     medium: string | null;
     campaign: string | null;
+    content?: string | null;
   };
   linkVisit?: (attempt: AuthAttemptRecord) => Promise<void> | void;
   linkQuizResponse?: (attempt: AuthAttemptRecord) => Promise<void> | void;

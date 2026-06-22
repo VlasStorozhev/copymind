@@ -124,6 +124,66 @@ export type Database = {
           },
         ]
       }
+      ad_spend_entries: {
+        Row: {
+          campaign: string | null
+          content: string | null
+          created_at: string
+          currency: string
+          id: string
+          medium: string | null
+          source: string
+          spend_cents: number
+          updated_at: string
+        }
+        Insert: {
+          campaign?: string | null
+          content?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          medium?: string | null
+          source: string
+          spend_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          campaign?: string | null
+          content?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          medium?: string | null
+          source?: string
+          spend_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dashboard_settings: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          product_price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          product_price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          product_price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       funnel_events: {
         Row: {
           created_at: string
@@ -237,11 +297,13 @@ export type Database = {
           email_verified_at: string | null
           first_authenticated_at: string
           first_touch_campaign: string | null
+          first_touch_content: string | null
           first_touch_medium: string | null
           first_touch_source: string | null
           id: string
           last_seen_at: string
           last_touch_campaign: string | null
+          last_touch_content: string | null
           last_touch_medium: string | null
           last_touch_source: string | null
           product_interest_source: string | null
@@ -255,11 +317,13 @@ export type Database = {
           email_verified_at?: string | null
           first_authenticated_at?: string
           first_touch_campaign?: string | null
+          first_touch_content?: string | null
           first_touch_medium?: string | null
           first_touch_source?: string | null
           id?: string
           last_seen_at?: string
           last_touch_campaign?: string | null
+          last_touch_content?: string | null
           last_touch_medium?: string | null
           last_touch_source?: string | null
           product_interest_source?: string | null
@@ -273,11 +337,13 @@ export type Database = {
           email_verified_at?: string | null
           first_authenticated_at?: string
           first_touch_campaign?: string | null
+          first_touch_content?: string | null
           first_touch_medium?: string | null
           first_touch_source?: string | null
           id?: string
           last_seen_at?: string
           last_touch_campaign?: string | null
+          last_touch_content?: string | null
           last_touch_medium?: string | null
           last_touch_source?: string | null
           product_interest_source?: string | null
@@ -290,6 +356,7 @@ export type Database = {
       visits: {
         Row: {
           campaign: string | null
+          content: string | null
           created_at: string
           id: string
           landing_url: string | null
@@ -302,6 +369,7 @@ export type Database = {
         }
         Insert: {
           campaign?: string | null
+          content?: string | null
           created_at?: string
           id?: string
           landing_url?: string | null
@@ -314,6 +382,7 @@ export type Database = {
         }
         Update: {
           campaign?: string | null
+          content?: string | null
           created_at?: string
           id?: string
           landing_url?: string | null

@@ -6,6 +6,7 @@ export type VisitRecord = {
   source: string;
   medium: string | null;
   campaign: string | null;
+  content: string | null;
   landing_url: string | null;
   referrer: string | null;
   user_id: string | null;
@@ -20,6 +21,7 @@ export type VisitRepository = {
     source: string;
     medium: string | null;
     campaign: string | null;
+    content: string | null;
     landingUrl: string | null;
     referrer: string | null;
     userId?: string | null;
@@ -49,6 +51,7 @@ export function ensureVisit(input: {
     source: input.source.source,
     medium: input.source.medium,
     campaign: input.source.campaign,
+    content: input.source.content,
     landingUrl: input.source.landingUrl,
     referrer: input.source.referrer,
     userId: input.userId ?? null,

@@ -6,6 +6,7 @@ export type DashboardFixture = {
     source: string
     medium: string | null
     campaign: string | null
+    content: string | null
     landing_url: string | null
     referrer: string | null
     created_at: string
@@ -48,12 +49,29 @@ export type DashboardFixture = {
     first_touch_source: string | null
     first_touch_medium: string | null
     first_touch_campaign: string | null
+    first_touch_content: string | null
     last_seen_at: string
     last_touch_source: string | null
     last_touch_medium: string | null
     last_touch_campaign: string | null
+    last_touch_content: string | null
     product_interested_at: string | null
     product_interest_source: string | null
+    created_at: string
+    updated_at: string
+  }>
+  dashboardSettings: {
+    product_price_cents: number
+    currency: string
+  } | null
+  adSpendEntries: Array<{
+    id: string
+    source: string
+    medium: string | null
+    campaign: string | null
+    content: string | null
+    spend_cents: number
+    currency: string
     created_at: string
     updated_at: string
   }>
@@ -85,7 +103,8 @@ export function buildDashboardFixture(): DashboardFixture {
         source: 'google',
         medium: 'cpc',
         campaign: 'launch',
-        landing_url: 'https://decisionmind.example/?utm_source=google&utm_medium=cpc&utm_campaign=launch',
+        content: 'hero-a',
+        landing_url: 'https://decisionmind.example/?utm_source=google&utm_medium=cpc&utm_campaign=launch&utm_content=hero-a',
         referrer: 'https://www.google.com/',
         created_at: now,
         updated_at: now,
@@ -97,8 +116,9 @@ export function buildDashboardFixture(): DashboardFixture {
         source: 'facebook',
         medium: 'paid_social',
         campaign: 'retargeting',
+        content: 'video-1',
         landing_url:
-          'https://decisionmind.example/?utm_source=facebook&utm_medium=paid_social&utm_campaign=retargeting',
+          'https://decisionmind.example/?utm_source=facebook&utm_medium=paid_social&utm_campaign=retargeting&utm_content=video-1',
         referrer: 'https://www.facebook.com/',
         created_at: '2026-06-02T09:00:00.000Z',
         updated_at: '2026-06-02T09:00:00.000Z',
@@ -110,6 +130,7 @@ export function buildDashboardFixture(): DashboardFixture {
         source: 'direct',
         medium: null,
         campaign: null,
+        content: null,
         landing_url: 'https://decisionmind.example/',
         referrer: '',
         created_at: '2026-06-03T09:00:00.000Z',
@@ -349,14 +370,44 @@ export function buildDashboardFixture(): DashboardFixture {
         first_touch_source: 'google',
         first_touch_medium: 'cpc',
         first_touch_campaign: 'launch',
+        first_touch_content: 'hero-a',
         last_seen_at: '2026-06-02T09:01:00.000Z',
         last_touch_source: 'facebook',
         last_touch_medium: 'paid_social',
         last_touch_campaign: 'retargeting',
+        last_touch_content: 'video-1',
         product_interested_at: '2026-06-02T09:01:15.000Z',
         product_interest_source: 'mock_paywall_buy',
         created_at: '2026-06-02T09:01:00.000Z',
         updated_at: '2026-06-02T09:01:00.000Z',
+      },
+    ],
+    dashboardSettings: {
+      product_price_cents: 900,
+      currency: 'USD',
+    },
+    adSpendEntries: [
+      {
+        id: 'spend_google_launch_hero_a',
+        source: 'google',
+        medium: 'cpc',
+        campaign: 'launch',
+        content: 'hero-a',
+        spend_cents: 10000,
+        currency: 'USD',
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: 'spend_facebook_retargeting_video_1',
+        source: 'facebook',
+        medium: 'paid_social',
+        campaign: 'retargeting',
+        content: 'video-1',
+        spend_cents: 5000,
+        currency: 'USD',
+        created_at: now,
+        updated_at: now,
       },
     ],
     adminUsers: [

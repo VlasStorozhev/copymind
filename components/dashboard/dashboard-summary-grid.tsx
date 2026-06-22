@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function DashboardSummaryGrid({
   metrics,
 }: {
-  metrics: Array<{ label: string; value: number; description?: string }>
+  metrics: Array<{ label: string; value: number | string; description?: string }>
 }) {
   return (
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

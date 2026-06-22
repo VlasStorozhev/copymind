@@ -1,9 +1,19 @@
 export type DashboardSummary = {
+  businessMetrics: Array<{ label: string; value: string; description?: string }>
   summaryMetrics: Array<{ label: string; value: number; description?: string }>
-  anonymousConversion: Array<{ step: string; visits: number; conversionRate: number | null }>
-  authenticatedProductConversion: Array<{ step: string; visits: number; conversionRate: number | null }>
+  funnelConversion: Array<{
+    step: string
+    users: number
+    conversionFromPrevious: number | null
+    conversionFromLanding: number | null
+    costPerUserCents: number | null
+  }>
   sourceBreakdown: Array<{
     source: string
+    medium: string | null
+    campaign: string | null
+    content: string | null
+    spendCents: number
     visits: number
     quizCompletions: number
     emailSubmissions: number
@@ -21,9 +31,11 @@ export type DashboardSummary = {
     firstTouchSource: string | null
     firstTouchMedium: string | null
     firstTouchCampaign: string | null
+    firstTouchContent: string | null
     lastTouchSource: string | null
     lastTouchMedium: string | null
     lastTouchCampaign: string | null
+    lastTouchContent: string | null
     decisionPattern: string | null
     productInterest: string
     productInterestedAt: string | null
@@ -45,6 +57,26 @@ export type DashboardSummary = {
     mostCommonBlocker: string | null
     highestConvertingPattern: string | null
   }>
+  trafficBreakdown: Array<{
+    dimension: 'source' | 'campaign' | 'creative'
+    label: string
+    spendCents: number
+    landingUsers: number
+    paywallClicks: number
+    ctaRate: number | null
+    costPerPaywallClickCents: number | null
+  }>
+  productPriceCents: number
+  currency: string
+  adSpendEntries: Array<{
+    id: string
+    source: string
+    medium: string | null
+    campaign: string | null
+    content: string | null
+    spend_cents: number
+    currency: string
+  }>
 }
 
 type VisitRow = {
@@ -54,6 +86,7 @@ type VisitRow = {
   source: string
   medium: string | null
   campaign: string | null
+  content: string | null
   landing_url: string | null
   referrer: string | null
   created_at: string
@@ -99,10 +132,12 @@ type UserProfileRow = {
   first_touch_source: string | null
   first_touch_medium: string | null
   first_touch_campaign: string | null
+  first_touch_content: string | null
   last_seen_at: string
   last_touch_source: string | null
   last_touch_medium: string | null
   last_touch_campaign: string | null
+  last_touch_content: string | null
   product_interested_at: string | null
   product_interest_source: string | null
   created_at: string
@@ -114,17 +149,31 @@ type DashboardRows = {
   funnelEvents: FunnelEventRow[]
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
+  dashboardSettings?: {
+    product_price_cents: number
+    currency: string
+  } | null
+  adSpendEntries?: Array<{
+    id: string
+    source: string
+    medium: string | null
+    campaign: string | null
+    content: string | null
+    spend_cents: number
+    currency: string
+  }>
 }
 
-const ANONYMOUS_STEPS = [
+const FUNNEL_STEPS = [
   'landing_viewed',
   'start_clicked',
   'quiz_completed',
   'email_submitted',
-  'magic_link_sent',
+  'magic_link_verified',
+  'result_viewed',
+  'paywall_viewed',
+  'paywall_cta_clicked',
 ]
-
-const AUTHENTICATED_PRODUCT_STEPS = ['result_viewed', 'paywall_viewed', 'paywall_cta_clicked']
 
 function divide(numerator: number, denominator: number) {
   if (denominator === 0) {
@@ -156,25 +205,6 @@ function getVisitEventMap(funnelEvents: FunnelEventRow[]) {
 
 function hasEvent(eventMap: Map<string, Set<string>>, visitId: string, eventName: string) {
   return eventMap.get(visitId)?.has(eventName) ?? false
-}
-
-function buildConversionRows(params: {
-  visits: VisitRow[]
-  eventMap: Map<string, Set<string>>
-  visitFilter: (visit: VisitRow) => boolean
-  steps: string[]
-}) {
-  const relevantVisits = params.visits.filter(params.visitFilter)
-
-  return params.steps.map((step) => {
-    const visits = relevantVisits.filter((visit) => hasEvent(params.eventMap, visit.id, step)).length
-
-    return {
-      step,
-      visits,
-      conversionRate: divide(visits, relevantVisits.length),
-    }
-  })
 }
 
 function getLatestQuizResponseByUser(quizResponses: QuizResponseRow[]) {
@@ -226,6 +256,135 @@ function getSourceByVisit(visits: VisitRow[]) {
   return map
 }
 
+function formatCurrency(cents: number, currency: string) {
+  const amount = cents / 100
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+function formatRoas(value: number | null) {
+  if (value === null) {
+    return '—'
+  }
+
+  return `${value.toFixed(2)}x`
+}
+
+function getTotalSpendCents(adSpendEntries: DashboardRows['adSpendEntries']) {
+  return (adSpendEntries ?? []).reduce((total, entry) => total + entry.spend_cents, 0)
+}
+
+function getSpendForVisit(sourceSpend: DashboardRows['adSpendEntries'], visit: VisitRow) {
+  return (sourceSpend ?? [])
+    .filter((entry) => entry.source === visit.source)
+    .filter((entry) => entry.medium === null || entry.medium === visit.medium)
+    .filter((entry) => entry.campaign === null || entry.campaign === visit.campaign)
+    .filter((entry) => entry.content === null || entry.content === visit.content)
+    .reduce((total, entry) => total + entry.spend_cents, 0)
+}
+
+function buildFunnelRows(params: {
+  visits: VisitRow[]
+  eventMap: Map<string, Set<string>>
+  totalSpendCents: number
+}) {
+  const landingUsers = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
+  let previousUsers: number | null = null
+
+  return FUNNEL_STEPS.map((step) => {
+    const users = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, step)).length
+    const row = {
+      step,
+      users,
+      conversionFromPrevious: previousUsers === null ? null : divide(users, previousUsers),
+      conversionFromLanding: divide(users, landingUsers),
+      costPerUserCents: users === 0 ? null : Math.round(params.totalSpendCents / users),
+    }
+
+    previousUsers = users
+    return row
+  })
+}
+
+function getGroupLabel(visit: VisitRow, dimension: 'source' | 'campaign' | 'creative') {
+  if (dimension === 'source') {
+    return visit.source
+  }
+
+  if (dimension === 'campaign') {
+    return visit.campaign ?? 'direct'
+  }
+
+  return visit.content ?? 'direct'
+}
+
+function getSpendGroupLabel(
+  entry: NonNullable<DashboardRows['adSpendEntries']>[number],
+  dimension: 'source' | 'campaign' | 'creative',
+) {
+  if (dimension === 'source') {
+    return entry.source
+  }
+
+  if (dimension === 'campaign') {
+    return entry.campaign ?? 'direct'
+  }
+
+  return entry.content ?? 'direct'
+}
+
+function buildTrafficBreakdown(params: {
+  visits: VisitRow[]
+  eventMap: Map<string, Set<string>>
+  adSpendEntries: NonNullable<DashboardRows['adSpendEntries']>
+}) {
+  const dimensions: Array<'source' | 'campaign' | 'creative'> = ['source', 'campaign', 'creative']
+
+  return dimensions.flatMap((dimension) => {
+    const labels = new Set<string>()
+
+    for (const visit of params.visits) {
+      labels.add(getGroupLabel(visit, dimension))
+    }
+
+    for (const entry of params.adSpendEntries) {
+      labels.add(getSpendGroupLabel(entry, dimension))
+    }
+
+    return [...labels]
+      .map((label) => {
+        const visits = params.visits.filter((visit) => getGroupLabel(visit, dimension) === label)
+        const spendCents = params.adSpendEntries
+          .filter((entry) => getSpendGroupLabel(entry, dimension) === label)
+          .reduce((total, entry) => total + entry.spend_cents, 0)
+        const landingUsers = visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
+        const paywallClicks = visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'paywall_cta_clicked')).length
+
+        return {
+          dimension,
+          label,
+          spendCents,
+          landingUsers,
+          paywallClicks,
+          ctaRate: divide(paywallClicks, landingUsers),
+          costPerPaywallClickCents: paywallClicks === 0 ? null : Math.round(spendCents / paywallClicks),
+        }
+      })
+      .sort((left, right) => {
+        if (right.paywallClicks !== left.paywallClicks) {
+          return right.paywallClicks - left.paywallClicks
+        }
+
+        return left.label.localeCompare(right.label)
+      })
+  })
+}
+
 function getUniqueEventActors(params: {
   eventName: string
   funnelEvents: FunnelEventRow[]
@@ -271,6 +430,19 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   const eventMap = getVisitEventMap(rows.funnelEvents)
   const visitById = getSourceByVisit(rows.visits)
   const latestQuizResponseByUser = getLatestQuizResponseByUser(rows.quizResponses)
+  const adSpendEntries = rows.adSpendEntries ?? []
+  const productPriceCents = rows.dashboardSettings?.product_price_cents ?? 900
+  const currency = rows.dashboardSettings?.currency ?? 'USD'
+  const totalSpendCents = getTotalSpendCents(adSpendEntries)
+  const paywallClickActors = getUniqueEventActors({
+    eventName: 'paywall_cta_clicked',
+    funnelEvents: rows.funnelEvents,
+    visitById,
+  })
+  const paywallClickVisits = rows.visits.filter((visit) => hasEvent(eventMap, visit.id, 'paywall_cta_clicked')).length
+  const estimatedRevenueCents = paywallClickVisits * productPriceCents
+  const estimatedProfitCents = estimatedRevenueCents - totalSpendCents
+  const intentCpaCents = paywallClickVisits === 0 ? null : Math.round(totalSpendCents / paywallClickVisits)
 
   const anonymousVisits = rows.visits.filter((visit) => !visit.user_id)
   const anonymousVisitors = new Set(anonymousVisits.map((visit) => visit.visitor_id)).size
@@ -280,15 +452,21 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     .map((source) => {
       const visits = rows.visits.filter((visit) => visit.source === source)
       const visitCount = visits.length
+      const firstVisit = visits[0] ?? null
       const quizCompletions = visits.filter((visit) => hasEvent(eventMap, visit.id, 'quiz_completed')).length
       const emailSubmissions = visits.filter((visit) => hasEvent(eventMap, visit.id, 'email_submitted')).length
       const magicLinksSent = visits.filter((visit) => hasEvent(eventMap, visit.id, 'magic_link_sent')).length
       const magicLinksVerified = visits.filter((visit) => hasEvent(eventMap, visit.id, 'magic_link_verified')).length
       const paywallViews = visits.filter((visit) => hasEvent(eventMap, visit.id, 'paywall_viewed')).length
       const paywallClicks = visits.filter((visit) => hasEvent(eventMap, visit.id, 'paywall_cta_clicked')).length
+      const spendCents = visits.reduce((total, visit) => total + getSpendForVisit(adSpendEntries, visit), 0)
 
       return {
         source,
+        medium: firstVisit?.medium ?? null,
+        campaign: firstVisit?.campaign ?? null,
+        content: firstVisit?.content ?? null,
+        spendCents,
         visits: visitCount,
         quizCompletions,
         emailSubmissions,
@@ -320,9 +498,11 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
         firstTouchSource: profile.first_touch_source,
         firstTouchMedium: profile.first_touch_medium,
         firstTouchCampaign: profile.first_touch_campaign,
+        firstTouchContent: profile.first_touch_content,
         lastTouchSource: profile.last_touch_source,
         lastTouchMedium: profile.last_touch_medium,
         lastTouchCampaign: profile.last_touch_campaign,
+        lastTouchContent: profile.last_touch_content,
         decisionPattern: latestResponse?.decision_pattern ?? null,
         productInterest: profile.product_interested_at ? 'Interested' : '—',
         productInterestedAt: profile.product_interested_at,
@@ -437,6 +617,29 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     })
 
   return {
+    businessMetrics: [
+      { label: 'Ad Spend', value: formatCurrency(totalSpendCents, currency) },
+      {
+        label: 'Estimated Revenue',
+        value: formatCurrency(estimatedRevenueCents, currency),
+        description: `Paywall CTA clicks × ${formatCurrency(productPriceCents, currency)}`,
+      },
+      { label: 'Estimated Profit', value: formatCurrency(estimatedProfitCents, currency) },
+      {
+        label: 'ROAS',
+        value: formatRoas(totalSpendCents === 0 ? null : estimatedRevenueCents / totalSpendCents),
+      },
+      {
+        label: 'Intent CPA',
+        value: intentCpaCents === null ? '—' : formatCurrency(intentCpaCents, currency),
+        description: 'Spend / paywall CTA clicks',
+      },
+      {
+        label: 'Paywall CTA Clicks',
+        value: String(paywallClickVisits),
+        description: 'North Star for MVP validation',
+      },
+    ],
     summaryMetrics: [
       { label: 'Total visits', value: rows.visits.length },
       { label: 'Anonymous visitors', value: anonymousVisitors },
@@ -452,24 +655,33 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       { label: 'Repeat quiz users', value: countRepeatQuizUsers(rows.quizResponses) },
       {
         label: 'Buy intents',
-        value: getUniqueEventActors({ eventName: 'paywall_cta_clicked', funnelEvents: rows.funnelEvents, visitById }),
+        value: paywallClickActors,
       },
     ],
-    anonymousConversion: buildConversionRows({
+    funnelConversion: buildFunnelRows({
       visits: rows.visits,
       eventMap,
-      visitFilter: (visit) => !visit.user_id,
-      steps: ANONYMOUS_STEPS,
-    }),
-    authenticatedProductConversion: buildConversionRows({
-      visits: rows.visits,
-      eventMap,
-      visitFilter: (visit) => !!visit.user_id,
-      steps: AUTHENTICATED_PRODUCT_STEPS,
+      totalSpendCents,
     }),
     sourceBreakdown,
     registeredUsers,
     patternBreakdown,
     sourceByPattern,
+    trafficBreakdown: buildTrafficBreakdown({
+      visits: rows.visits,
+      eventMap,
+      adSpendEntries,
+    }),
+    productPriceCents,
+    currency,
+    adSpendEntries: adSpendEntries.map((entry) => ({
+      id: entry.id,
+      source: entry.source,
+      medium: entry.medium,
+      campaign: entry.campaign,
+      content: entry.content,
+      spend_cents: entry.spend_cents,
+      currency: entry.currency,
+    })),
   }
 }

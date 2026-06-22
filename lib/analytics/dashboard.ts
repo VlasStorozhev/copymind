@@ -11,6 +11,7 @@ type VisitRow = {
   source: string
   medium: string | null
   campaign: string | null
+  content: string | null
   landing_url: string | null
   referrer: string | null
   created_at: string
@@ -56,12 +57,34 @@ type UserProfileRow = {
   first_touch_source: string | null
   first_touch_medium: string | null
   first_touch_campaign: string | null
+  first_touch_content: string | null
   last_seen_at: string
   last_touch_source: string | null
   last_touch_medium: string | null
   last_touch_campaign: string | null
+  last_touch_content: string | null
   product_interested_at: string | null
   product_interest_source: string | null
+  created_at: string
+  updated_at: string
+}
+
+type DashboardSettingsRow = {
+  id: string
+  product_price_cents: number
+  currency: string
+  created_at: string
+  updated_at: string
+}
+
+type AdSpendEntryRow = {
+  id: string
+  source: string
+  medium: string | null
+  campaign: string | null
+  content: string | null
+  spend_cents: number
+  currency: string
   created_at: string
   updated_at: string
 }
@@ -71,35 +94,100 @@ export type DashboardRows = {
   funnelEvents: FunnelEventRow[]
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
+  dashboardSettings: DashboardSettingsRow | null
+  adSpendEntries: AdSpendEntryRow[]
 }
 
 export async function loadDashboardRows(): Promise<DashboardRows> {
   const client = createAdminClient()
 
-  const [visitsResult, funnelEventsResult, quizResponsesResult, userProfilesResult] = await Promise.all([
-    client
-      .from('visits')
-      .select('id, visitor_id, user_id, source, medium, campaign, landing_url, referrer, created_at, updated_at'),
-    client
-      .from('funnel_events')
-      .select('id, visit_id, event_type, user_id, step, metadata, created_at'),
-    client
-      .from('quiz_responses')
-      .select(
-        'id, visitor_id, user_id, visit_id, answers, gender, current_decision, decision_context, decision_pattern, primary_blocker, emotional_driver, support_preference, recommended_starting_point, confidence, created_at, updated_at, completed_at',
-      ),
-    client
-      .from('user_profiles')
-      .select(
-        'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, product_interested_at, product_interest_source, created_at, updated_at',
-      ),
-  ])
+  const [visitsResult, funnelEventsResult, quizResponsesResult, userProfilesResult, dashboardSettingsResult, adSpendEntriesResult] =
+    await Promise.all([
+      loadVisits(client),
+      client.from('funnel_events').select('id, visit_id, event_type, user_id, step, metadata, created_at'),
+      client
+        .from('quiz_responses')
+        .select(
+          'id, visitor_id, user_id, visit_id, answers, gender, current_decision, decision_context, decision_pattern, primary_blocker, emotional_driver, support_preference, recommended_starting_point, confidence, created_at, updated_at, completed_at',
+        ),
+      loadUserProfiles(client),
+      client
+        .from('dashboard_settings')
+        .select('id, product_price_cents, currency, created_at, updated_at')
+        .eq('id', 'default')
+        .maybeSingle(),
+      client
+        .from('ad_spend_entries')
+        .select('id, source, medium, campaign, content, spend_cents, currency, created_at, updated_at')
+        .order('created_at', { ascending: true }),
+    ])
+
+  assertDashboardQuery(funnelEventsResult.error, 'funnel_events')
+  assertDashboardQuery(quizResponsesResult.error, 'quiz_responses')
 
   return {
     visits: (visitsResult.data ?? []) as VisitRow[],
     funnelEvents: (funnelEventsResult.data ?? []) as FunnelEventRow[],
     quizResponses: (quizResponsesResult.data ?? []) as QuizResponseRow[],
     userProfiles: (userProfilesResult.data ?? []) as UserProfileRow[],
+    dashboardSettings: dashboardSettingsResult.error ? null : ((dashboardSettingsResult.data ?? null) as DashboardSettingsRow | null),
+    adSpendEntries: adSpendEntriesResult.error ? [] : ((adSpendEntriesResult.data ?? []) as AdSpendEntryRow[]),
+  }
+}
+
+function assertDashboardQuery(error: { message: string } | null, table: string) {
+  if (error) {
+    throw new Error(`Could not load dashboard ${table}: ${error.message}`)
+  }
+}
+
+async function loadVisits(client: ReturnType<typeof createAdminClient>) {
+  const withContent = await client
+    .from('visits')
+    .select('id, visitor_id, user_id, source, medium, campaign, content, landing_url, referrer, created_at, updated_at')
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const withoutContent = await client
+    .from('visits')
+    .select('id, visitor_id, user_id, source, medium, campaign, landing_url, referrer, created_at, updated_at')
+
+  assertDashboardQuery(withoutContent.error, 'visits')
+
+  return {
+    ...withoutContent,
+    data: (withoutContent.data ?? []).map((visit) => ({ ...visit, content: null })),
+  }
+}
+
+async function loadUserProfiles(client: ReturnType<typeof createAdminClient>) {
+  const withContent = await client
+    .from('user_profiles')
+    .select(
+      'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, first_touch_content, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, last_touch_content, product_interested_at, product_interest_source, created_at, updated_at',
+    )
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const withoutContent = await client
+    .from('user_profiles')
+    .select(
+      'id, user_id, email, email_verified_at, first_authenticated_at, first_touch_source, first_touch_medium, first_touch_campaign, last_seen_at, last_touch_source, last_touch_medium, last_touch_campaign, product_interested_at, product_interest_source, created_at, updated_at',
+    )
+
+  assertDashboardQuery(withoutContent.error, 'user_profiles')
+
+  return {
+    ...withoutContent,
+    data: (withoutContent.data ?? []).map((profile) => ({
+      ...profile,
+      first_touch_content: null,
+      last_touch_content: null,
+    })),
   }
 }
 

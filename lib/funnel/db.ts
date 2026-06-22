@@ -4,6 +4,8 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import type { Json } from '@/lib/database.types'
 
 type SupabaseClient = ReturnType<typeof createAdminClient>
+const VISIT_SELECT_WITH_CONTENT = 'id, visitor_id, source, medium, campaign, content, landing_url, referrer, user_id, created_at, updated_at'
+const VISIT_SELECT_LEGACY = 'id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at'
 
 type VisitRecord = {
   id: string
@@ -11,6 +13,7 @@ type VisitRecord = {
   source: string
   medium: string | null
   campaign: string | null
+  content: string | null
   landing_url: string | null
   referrer: string | null
   user_id: string | null
@@ -25,22 +28,11 @@ export async function getOrCreateVisit(input: {
   referrer: string
   userId?: string | null
 }) {
-  const latestVisit = await input.client
-    .from('visits')
-    .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
-    .eq('visitor_id', input.visitorId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle<VisitRecord>()
+  const latestVisit = await selectLatestVisit(input.client, input.visitorId)
 
   if (latestVisit.data) {
     if (input.userId && latestVisit.data.user_id !== input.userId) {
-      const updated = await input.client
-        .from('visits')
-        .update({ user_id: input.userId })
-        .eq('id', latestVisit.data.id)
-        .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
-        .single<VisitRecord>()
+      const updated = await updateVisit(input.client, latestVisit.data.id, { user_id: input.userId })
 
       return updated.data
     }
@@ -53,21 +45,16 @@ export async function getOrCreateVisit(input: {
     referrer: input.referrer,
   })
 
-  const created = await input.client
-    .from('visits')
-    .insert({
-      visitor_id: input.visitorId,
-      source: source.source,
-      medium: source.medium,
-      campaign: source.campaign,
-      landing_url: source.landingUrl,
-      referrer: source.referrer,
-      user_id: input.userId ?? null,
-    })
-    .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
-    .single<VisitRecord>()
-
-  return created.data
+  return insertVisit(input.client, {
+    visitor_id: input.visitorId,
+    source: source.source,
+    medium: source.medium,
+    campaign: source.campaign,
+    content: source.content,
+    landing_url: source.landingUrl,
+    referrer: source.referrer,
+    user_id: input.userId ?? null,
+  })
 }
 
 export async function updateVisitUserId(input: {
@@ -75,14 +62,96 @@ export async function updateVisitUserId(input: {
   visitId: string
   userId: string
 }) {
-  const updated = await input.client
-    .from('visits')
-    .update({ user_id: input.userId })
-    .eq('id', input.visitId)
-    .select('id, visitor_id, source, medium, campaign, landing_url, referrer, user_id, created_at, updated_at')
-    .single<VisitRecord>()
+  const updated = await updateVisit(input.client, input.visitId, { user_id: input.userId })
 
   return updated.data
+}
+
+async function selectLatestVisit(client: SupabaseClient, visitorId: string) {
+  const withContent = await client
+    .from('visits')
+    .select(VISIT_SELECT_WITH_CONTENT)
+    .eq('visitor_id', visitorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<VisitRecord>()
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const legacy = await client
+    .from('visits')
+    .select(VISIT_SELECT_LEGACY)
+    .eq('visitor_id', visitorId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<Omit<VisitRecord, 'content'>>()
+
+  return {
+    ...legacy,
+    data: legacy.data ? { ...legacy.data, content: null } : null,
+  }
+}
+
+async function insertVisit(
+  client: SupabaseClient,
+  input: {
+    visitor_id: string
+    source: string
+    medium: string | null
+    campaign: string | null
+    content: string | null
+    landing_url: string | null
+    referrer: string | null
+    user_id: string | null
+  },
+) {
+  const withContent = await client.from('visits').insert(input).select(VISIT_SELECT_WITH_CONTENT).single<VisitRecord>()
+
+  if (!withContent.error) {
+    return withContent.data
+  }
+
+  const legacyInput = {
+    visitor_id: input.visitor_id,
+    source: input.source,
+    medium: input.medium,
+    campaign: input.campaign,
+    landing_url: input.landing_url,
+    referrer: input.referrer,
+    user_id: input.user_id,
+  }
+  const legacy = await client.from('visits').insert(legacyInput).select(VISIT_SELECT_LEGACY).single<Omit<VisitRecord, 'content'>>()
+
+  return legacy.data ? { ...legacy.data, content: null } : null
+}
+
+async function updateVisit(client: SupabaseClient, visitId: string, input: Partial<VisitRecord>) {
+  const withContent = await client
+    .from('visits')
+    .update(input)
+    .eq('id', visitId)
+    .select(VISIT_SELECT_WITH_CONTENT)
+    .single<VisitRecord>()
+
+  if (!withContent.error) {
+    return withContent
+  }
+
+  const legacyInput: Partial<VisitRecord> = { ...input }
+  delete legacyInput.content
+  const legacy = await client
+    .from('visits')
+    .update(legacyInput)
+    .eq('id', visitId)
+    .select(VISIT_SELECT_LEGACY)
+    .single<Omit<VisitRecord, 'content'>>()
+
+  return {
+    ...legacy,
+    data: legacy.data ? { ...legacy.data, content: null } : null,
+  }
 }
 
 export async function recordFunnelEvent(input: {

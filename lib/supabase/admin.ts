@@ -19,8 +19,14 @@ export function createClient() {
       update() {
         return this;
       },
+      delete() {
+        return this;
+      },
       eq() {
         return this;
+      },
+      neq() {
+        return Promise.resolve({ data: null, error: null });
       },
       order() {
         return this;

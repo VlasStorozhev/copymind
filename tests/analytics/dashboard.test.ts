@@ -10,21 +10,77 @@ describe('buildDashboardSummary', () => {
     funnelEvents: fixture.funnelEvents,
     quizResponses: fixture.quizResponses,
     userProfiles: fixture.userProfiles,
+    dashboardSettings: fixture.dashboardSettings,
+    adSpendEntries: fixture.adSpendEntries,
   })
 
-  it('builds anonymous acquisition and authenticated product conversion tables', () => {
-    expect(summary.anonymousConversion).toEqual([
-      { step: 'landing_viewed', visits: 2, conversionRate: 1 },
-      { step: 'start_clicked', visits: 2, conversionRate: 1 },
-      { step: 'quiz_completed', visits: 1, conversionRate: 0.5 },
-      { step: 'email_submitted', visits: 1, conversionRate: 0.5 },
-      { step: 'magic_link_sent', visits: 1, conversionRate: 0.5 },
+  it('builds business metrics and one end-to-end validation funnel', () => {
+    expect(summary.businessMetrics).toEqual([
+      { label: 'Ad Spend', value: '$150.00' },
+      { label: 'Estimated Revenue', value: '$18.00', description: 'Paywall CTA clicks × $9.00' },
+      { label: 'Estimated Profit', value: '-$132.00' },
+      { label: 'ROAS', value: '0.12x' },
+      { label: 'Intent CPA', value: '$75.00', description: 'Spend / paywall CTA clicks' },
+      { label: 'Paywall CTA Clicks', value: '2', description: 'North Star for MVP validation' },
     ])
 
-    expect(summary.authenticatedProductConversion).toEqual([
-      { step: 'result_viewed', visits: 1, conversionRate: 1 },
-      { step: 'paywall_viewed', visits: 1, conversionRate: 1 },
-      { step: 'paywall_cta_clicked', visits: 1, conversionRate: 1 },
+    expect(summary.funnelConversion).toEqual([
+      {
+        step: 'landing_viewed',
+        users: 3,
+        conversionFromPrevious: null,
+        conversionFromLanding: 1,
+        costPerUserCents: 5000,
+      },
+      {
+        step: 'start_clicked',
+        users: 3,
+        conversionFromPrevious: 1,
+        conversionFromLanding: 1,
+        costPerUserCents: 5000,
+      },
+      {
+        step: 'quiz_completed',
+        users: 2,
+        conversionFromPrevious: 2 / 3,
+        conversionFromLanding: 2 / 3,
+        costPerUserCents: 7500,
+      },
+      {
+        step: 'email_submitted',
+        users: 1,
+        conversionFromPrevious: 0.5,
+        conversionFromLanding: 1 / 3,
+        costPerUserCents: 15000,
+      },
+      {
+        step: 'magic_link_verified',
+        users: 1,
+        conversionFromPrevious: 1,
+        conversionFromLanding: 1 / 3,
+        costPerUserCents: 15000,
+      },
+      {
+        step: 'result_viewed',
+        users: 2,
+        conversionFromPrevious: 2,
+        conversionFromLanding: 2 / 3,
+        costPerUserCents: 7500,
+      },
+      {
+        step: 'paywall_viewed',
+        users: 2,
+        conversionFromPrevious: 1,
+        conversionFromLanding: 2 / 3,
+        costPerUserCents: 7500,
+      },
+      {
+        step: 'paywall_cta_clicked',
+        users: 2,
+        conversionFromPrevious: 1,
+        conversionFromLanding: 2 / 3,
+        costPerUserCents: 7500,
+      },
     ])
   })
 
@@ -42,6 +98,10 @@ describe('buildDashboardSummary', () => {
     expect(summary.sourceBreakdown).toEqual([
       {
         source: 'direct',
+        medium: null,
+        campaign: null,
+        content: null,
+        spendCents: 0,
         visits: 1,
         quizCompletions: 0,
         emailSubmissions: 0,
@@ -56,6 +116,10 @@ describe('buildDashboardSummary', () => {
       },
       {
         source: 'facebook',
+        medium: 'paid_social',
+        campaign: 'retargeting',
+        content: 'video-1',
+        spendCents: 5000,
         visits: 1,
         quizCompletions: 1,
         emailSubmissions: 0,
@@ -70,6 +134,10 @@ describe('buildDashboardSummary', () => {
       },
       {
         source: 'google',
+        medium: 'cpc',
+        campaign: 'launch',
+        content: 'hero-a',
+        spendCents: 10000,
         visits: 1,
         quizCompletions: 1,
         emailSubmissions: 1,
@@ -90,9 +158,11 @@ describe('buildDashboardSummary', () => {
         firstTouchSource: 'google',
         firstTouchMedium: 'cpc',
         firstTouchCampaign: 'launch',
+        firstTouchContent: 'hero-a',
         lastTouchSource: 'facebook',
         lastTouchMedium: 'paid_social',
         lastTouchCampaign: 'retargeting',
+        lastTouchContent: 'video-1',
         decisionPattern: 'explorer',
         productInterest: 'Interested',
         productInterestedAt: '2026-06-02T09:01:15.000Z',
@@ -156,6 +226,7 @@ describe('buildDashboardSummary', () => {
           ...fixture.visits[1],
           id: 'visit_facebook_repeat_second',
           visitor_id: 'visitor_facebook_return_second',
+          content: 'video-1',
         },
       ],
       funnelEvents: [
@@ -191,6 +262,8 @@ describe('buildDashboardSummary', () => {
         },
       ],
       userProfiles: fixture.userProfiles,
+      dashboardSettings: fixture.dashboardSettings,
+      adSpendEntries: fixture.adSpendEntries,
     })
 
     expect(summaryWithRepeatUser.summaryMetrics).toEqual(
@@ -201,5 +274,91 @@ describe('buildDashboardSummary', () => {
         { label: 'Buy intents', value: 2 },
       ]),
     )
+  })
+
+  it('builds traffic breakdowns by source, campaign, and creative', () => {
+    expect(summary.trafficBreakdown).toEqual([
+      {
+        dimension: 'source',
+        label: 'facebook',
+        spendCents: 5000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 5000,
+      },
+      {
+        dimension: 'source',
+        label: 'google',
+        spendCents: 10000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 10000,
+      },
+      {
+        dimension: 'source',
+        label: 'direct',
+        spendCents: 0,
+        landingUsers: 1,
+        paywallClicks: 0,
+        ctaRate: 0,
+        costPerPaywallClickCents: null,
+      },
+      {
+        dimension: 'campaign',
+        label: 'launch',
+        spendCents: 10000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 10000,
+      },
+      {
+        dimension: 'campaign',
+        label: 'retargeting',
+        spendCents: 5000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 5000,
+      },
+      {
+        dimension: 'campaign',
+        label: 'direct',
+        spendCents: 0,
+        landingUsers: 1,
+        paywallClicks: 0,
+        ctaRate: 0,
+        costPerPaywallClickCents: null,
+      },
+      {
+        dimension: 'creative',
+        label: 'hero-a',
+        spendCents: 10000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 10000,
+      },
+      {
+        dimension: 'creative',
+        label: 'video-1',
+        spendCents: 5000,
+        landingUsers: 1,
+        paywallClicks: 1,
+        ctaRate: 1,
+        costPerPaywallClickCents: 5000,
+      },
+      {
+        dimension: 'creative',
+        label: 'direct',
+        spendCents: 0,
+        landingUsers: 1,
+        paywallClicks: 0,
+        ctaRate: 0,
+        costPerPaywallClickCents: null,
+      },
+    ])
   })
 })
