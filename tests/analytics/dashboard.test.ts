@@ -17,11 +17,11 @@ describe('buildDashboardSummary', () => {
   it('builds business metrics and one end-to-end validation funnel', () => {
     expect(summary.businessMetrics).toEqual([
       { label: 'Ad Spend', value: '$150.00' },
-      { label: 'Estimated Revenue', value: '$18.00', description: 'Paywall CTA clicks × $9.00' },
-      { label: 'Estimated Profit', value: '-$132.00' },
+      { label: 'Intent Revenue', value: '$18.00', description: 'Purchase intent × $9.00' },
+      { label: 'Intent Profit', value: '-$132.00' },
       { label: 'ROAS', value: '0.12x' },
-      { label: 'Intent CPA', value: '$75.00', description: 'Spend / paywall CTA clicks' },
-      { label: 'Paywall CTA Clicks', value: '2', description: 'North Star for MVP validation' },
+      { label: 'Intent CPA', value: '$75.00', description: 'Spend / purchase intent' },
+      { label: 'Purchase Intent', value: '2', description: 'Unique users who clicked the paywall CTA' },
     ])
 
     expect(summary.funnelConversion).toEqual([
@@ -379,6 +379,13 @@ describe('buildDashboardSummary', () => {
         { label: 'Quiz completed', value: 2 },
         { label: 'Repeat quiz users', value: 1 },
         { label: 'Buy intents', value: 2 },
+      ]),
+    )
+    expect(summaryWithRepeatUser.businessMetrics).toEqual(
+      expect.arrayContaining([
+        { label: 'Intent Revenue', value: '$18.00', description: 'Purchase intent × $9.00' },
+        { label: 'Intent CPA', value: '$75.00', description: 'Spend / purchase intent' },
+        { label: 'Purchase Intent', value: '2', description: 'Unique users who clicked the paywall CTA' },
       ]),
     )
   })

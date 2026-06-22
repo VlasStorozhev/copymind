@@ -44,7 +44,7 @@ Primary funnel reporting should use unique acquisition visitors unless a metric 
 - `quiz completions`: unique acquisition visitors with `quiz_completed`.
 - `email submissions`: unique acquisition visitors with successful `email_submitted`.
 - `result views`: unique acquisition visitors with `result_viewed`.
-- `paywall CTA clicks`: unique acquisition visitors with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
+- `purchase intent`: unique acquisition visitors with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
 - `new users`: unique Supabase Auth users first verified in the selected period.
 - `returning users`: unique Supabase Auth users that already existed before the selected visit.
 

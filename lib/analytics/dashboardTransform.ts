@@ -643,10 +643,10 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     funnelEvents: rows.funnelEvents,
     visitById,
   })
-  const paywallClickVisits = rows.visits.filter((visit) => hasEvent(eventMap, visit.id, 'paywall_cta_clicked')).length
-  const estimatedRevenueCents = paywallClickVisits * productPriceCents
+  const purchaseIntentActors = paywallClickActors
+  const estimatedRevenueCents = purchaseIntentActors * productPriceCents
   const estimatedProfitCents = estimatedRevenueCents - totalSpendCents
-  const intentCpaCents = paywallClickVisits === 0 ? null : Math.round(totalSpendCents / paywallClickVisits)
+  const intentCpaCents = purchaseIntentActors === 0 ? null : Math.round(totalSpendCents / purchaseIntentActors)
 
   const anonymousVisits = rows.visits.filter((visit) => !visit.user_id)
   const anonymousVisitors = new Set(anonymousVisits.map((visit) => visit.visitor_id)).size
@@ -824,11 +824,11 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     businessMetrics: [
       { label: 'Ad Spend', value: formatCurrency(totalSpendCents, currency) },
       {
-        label: 'Estimated Revenue',
+        label: 'Intent Revenue',
         value: formatCurrency(estimatedRevenueCents, currency),
-        description: `Paywall CTA clicks × ${formatCurrency(productPriceCents, currency)}`,
+        description: `Purchase intent × ${formatCurrency(productPriceCents, currency)}`,
       },
-      { label: 'Estimated Profit', value: formatCurrency(estimatedProfitCents, currency) },
+      { label: 'Intent Profit', value: formatCurrency(estimatedProfitCents, currency) },
       {
         label: 'ROAS',
         value: formatRoas(totalSpendCents === 0 ? null : estimatedRevenueCents / totalSpendCents),
@@ -836,12 +836,12 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       {
         label: 'Intent CPA',
         value: intentCpaCents === null ? '—' : formatCurrency(intentCpaCents, currency),
-        description: 'Spend / paywall CTA clicks',
+        description: 'Spend / purchase intent',
       },
       {
-        label: 'Paywall CTA Clicks',
-        value: String(paywallClickVisits),
-        description: 'North Star for MVP validation',
+        label: 'Purchase Intent',
+        value: String(purchaseIntentActors),
+        description: 'Unique users who clicked the paywall CTA',
       },
     ],
     summaryMetrics: [

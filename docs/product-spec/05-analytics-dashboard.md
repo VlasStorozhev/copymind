@@ -29,13 +29,13 @@ Access entry points:
 Business metrics:
 
 - ad spend
-- estimated revenue
-- estimated profit
+- intent revenue
+- intent profit
 - ROAS
 - intent CPA
-- paywall CTA clicks
+- purchase intent
 
-For the MVP, `paywall_cta_clicked` is the primary North Star because checkout is not connected yet. Estimated revenue should use `paywall_cta_clicked * editable product price`.
+For the MVP, `paywall_cta_clicked` is the primary North Star because checkout is not connected yet. Purchase intent should count unique users who clicked the paywall CTA. Intent revenue should use `purchase intent * editable product price`.
 
 Core funnel metrics:
 
@@ -44,7 +44,7 @@ Core funnel metrics:
 - quiz completions
 - email submissions
 - result views
-- paywall CTA clicks
+- purchase intent
 - new users
 - returning users
 
