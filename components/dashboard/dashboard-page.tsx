@@ -196,7 +196,7 @@ function TrafficTreeSection({
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <div className="space-y-1.5">
           <CardTitle>Traffic breakdown</CardTitle>
-          <CardDescription>Drill down from source to campaign to creative without duplicating rows.</CardDescription>
+          <CardDescription>Compare funnel performance by traffic source.</CardDescription>
         </div>
         {onRefresh ? (
           <Button
@@ -302,7 +302,7 @@ function DashboardSettingsCard({
     <Card>
       <CardHeader>
         <CardTitle>Business inputs</CardTitle>
-        <CardDescription>Edit all-time product price and ad spend. Available to admin users.</CardDescription>
+        <CardDescription>Edit all-time product price and ad spend.</CardDescription>
       </CardHeader>
       <CardContent>
         <form
