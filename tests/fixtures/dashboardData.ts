@@ -60,6 +60,15 @@ export type DashboardFixture = {
     created_at: string
     updated_at: string
   }>
+  emailLeads: Array<{
+    id: string
+    email: string
+    status: string
+    visitor_id: string | null
+    visit_id: string | null
+    first_submitted_at: string
+    last_submitted_at: string
+  }>
   dashboardSettings: {
     product_price_cents: number
     currency: string
@@ -389,6 +398,17 @@ export function buildDashboardFixture(): DashboardFixture {
         product_interest_source: 'mock_paywall_buy',
         created_at: '2026-06-02T09:01:00.000Z',
         updated_at: '2026-06-02T09:01:00.000Z',
+      },
+    ],
+    emailLeads: [
+      {
+        id: 'lead_google_first',
+        email: 'user.google.repeat@example.com',
+        status: 'verified',
+        visitor_id: 'visitor_google_first',
+        visit_id: 'visit_google_first',
+        first_submitted_at: '2026-06-01T09:01:10.000Z',
+        last_submitted_at: '2026-06-01T09:01:10.000Z',
       },
     ],
     dashboardSettings: {

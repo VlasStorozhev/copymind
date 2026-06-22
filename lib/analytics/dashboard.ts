@@ -132,7 +132,6 @@ export async function loadDashboardRows(): Promise<DashboardRows> {
     client
       .from('email_leads')
       .select('id, email, status, visitor_id, visit_id, first_submitted_at, last_submitted_at')
-      .eq('status', 'pending_verification')
       .order('last_submitted_at', { ascending: false }),
     client
       .from('dashboard_settings')

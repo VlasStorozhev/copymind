@@ -10,6 +10,7 @@ describe('buildDashboardSummary', () => {
     funnelEvents: fixture.funnelEvents,
     quizResponses: fixture.quizResponses,
     userProfiles: fixture.userProfiles,
+    emailLeads: fixture.emailLeads,
     dashboardSettings: fixture.dashboardSettings,
     adSpendEntries: fixture.adSpendEntries,
   })
@@ -44,15 +45,15 @@ describe('buildDashboardSummary', () => {
       },
       {
         step: 'Quiz Completed',
-        users: 2,
-        conversionFromPrevious: 1,
-        conversionFromVisitors: 2 / 3,
-        costPerUserCents: 7500,
+        users: 3,
+        conversionFromPrevious: 1.5,
+        conversionFromVisitors: 1,
+        costPerUserCents: 5000,
       },
       {
         step: 'Email Submitted',
         users: 1,
-        conversionFromPrevious: 0.5,
+        conversionFromPrevious: 1 / 3,
         conversionFromVisitors: 1 / 3,
         costPerUserCents: 15000,
       },
@@ -170,8 +171,32 @@ describe('buildDashboardSummary', () => {
           created_at: '2026-06-05T09:00:05.000Z',
         },
       ],
-      quizResponses: fixture.quizResponses,
+      quizResponses: [
+        ...fixture.quizResponses,
+        {
+          ...fixture.quizResponses[0],
+          id: 'quiz_tiktok_quiz_direct',
+          visitor_id: 'visitor_tiktok_quiz_direct',
+          user_id: null,
+          visit_id: 'visit_tiktok_quiz_direct',
+          created_at: '2026-06-04T09:00:40.000Z',
+          updated_at: '2026-06-04T09:01:00.000Z',
+          completed_at: '2026-06-04T09:01:00.000Z',
+        },
+      ],
       userProfiles: fixture.userProfiles,
+      emailLeads: [
+        ...fixture.emailLeads,
+        {
+          id: 'lead_tiktok_quiz_direct',
+          email: 'tiktok.direct@example.com',
+          status: 'pending_verification',
+          visitor_id: 'visitor_tiktok_quiz_direct',
+          visit_id: 'visit_tiktok_quiz_direct',
+          first_submitted_at: '2026-06-04T09:01:10.000Z',
+          last_submitted_at: '2026-06-04T09:01:10.000Z',
+        },
+      ],
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -179,7 +204,7 @@ describe('buildDashboardSummary', () => {
     expect(summaryWithDirectQuizAndUtilityPage.funnelConversion.map((row) => [row.step, row.users])).toEqual([
       ['Visitors', 4],
       ['Quiz Started', 3],
-      ['Quiz Completed', 3],
+      ['Quiz Completed', 4],
       ['Email Submitted', 2],
       ['Email Verified', 1],
       ['Result Viewed', 3],
@@ -206,7 +231,7 @@ describe('buildDashboardSummary', () => {
     expect(summary.summaryMetrics).toEqual([
       { label: 'Total visits', value: 3 },
       { label: 'Anonymous visitors', value: 2 },
-      { label: 'Quiz completed', value: 2 },
+      { label: 'Quiz completed', value: 3 },
       { label: 'Emails submitted', value: 1 },
       { label: 'Registered users', value: 1 },
       { label: 'Repeat quiz users', value: 0 },
@@ -380,6 +405,7 @@ describe('buildDashboardSummary', () => {
         },
       ],
       userProfiles: fixture.userProfiles,
+      emailLeads: fixture.emailLeads,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -387,16 +413,16 @@ describe('buildDashboardSummary', () => {
     expect(summaryWithRepeatUser.summaryMetrics).toEqual(
       expect.arrayContaining([
         { label: 'Total visits', value: 4 },
-        { label: 'Quiz completed', value: 2 },
+        { label: 'Quiz completed', value: 3 },
         { label: 'Repeat quiz users', value: 1 },
-        { label: 'Buy intents', value: 2 },
+        { label: 'Buy intents', value: 3 },
       ]),
     )
     expect(summaryWithRepeatUser.businessMetrics).toEqual(
       expect.arrayContaining([
-        { label: 'Intent Revenue', value: '$18.00', description: 'Purchase intent × $9.00' },
-        { label: 'Intent CPA', value: '$75.00', description: 'Spend / purchase intent' },
-        { label: 'Purchase Intent', value: '2', description: 'Unique users who clicked the paywall CTA' },
+        { label: 'Intent Revenue', value: '$27.00', description: 'Purchase intent × $9.00' },
+        { label: 'Intent CPA', value: '$50.00', description: 'Spend / purchase intent' },
+        { label: 'Purchase Intent', value: '3', description: 'Unique users who clicked the paywall CTA' },
       ]),
     )
   })
@@ -498,7 +524,7 @@ describe('buildDashboardSummary', () => {
         spendCents: 0,
         visitors: 1,
         quizStarted: 0,
-        quizCompleted: 0,
+        quizCompleted: 1,
         emailSubmitted: 0,
         purchaseIntent: 0,
         intentRate: 0,
@@ -511,7 +537,7 @@ describe('buildDashboardSummary', () => {
             spendCents: 0,
             visitors: 1,
             quizStarted: 0,
-            quizCompleted: 0,
+            quizCompleted: 1,
             emailSubmitted: 0,
             purchaseIntent: 0,
             intentRate: 0,
@@ -524,7 +550,7 @@ describe('buildDashboardSummary', () => {
                 spendCents: 0,
                 visitors: 1,
                 quizStarted: 0,
-                quizCompleted: 0,
+                quizCompleted: 1,
                 emailSubmitted: 0,
                 purchaseIntent: 0,
                 intentRate: 0,

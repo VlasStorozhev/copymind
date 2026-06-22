@@ -14,6 +14,7 @@ describe('DashboardPage', () => {
       funnelEvents: fixture.funnelEvents,
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
+      emailLeads: fixture.emailLeads,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -35,6 +36,7 @@ describe('DashboardPage', () => {
       funnelEvents: fixture.funnelEvents,
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
+      emailLeads: fixture.emailLeads,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -79,6 +81,7 @@ describe('DashboardPage', () => {
       funnelEvents: fixture.funnelEvents,
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
+      emailLeads: fixture.emailLeads,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
@@ -108,6 +111,7 @@ describe('DashboardPage', () => {
       funnelEvents: fixture.funnelEvents,
       quizResponses: fixture.quizResponses,
       userProfiles: fixture.userProfiles,
+      emailLeads: fixture.emailLeads,
       dashboardSettings: fixture.dashboardSettings,
       adSpendEntries: fixture.adSpendEntries,
     })
