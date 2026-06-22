@@ -88,6 +88,7 @@ export type TrafficTreeNode = {
   quizStarted: number
   quizCompleted: number
   emailSubmitted: number
+  emailVerified: number
   purchaseIntent: number
   intentRate: number | null
   costPerIntentCents: number | null
@@ -788,6 +789,14 @@ function buildTrafficNode(params: {
     identityByVisitorId: params.identityByVisitorId,
     allowedVisitIds: visitIds,
   })
+  const emailVerified = countStitchedEmailLeadIdentities({
+    emailLeads: params.emailLeads,
+    visitById: params.visitById,
+    visitorIdentities,
+    identityByVisitorId: params.identityByVisitorId,
+    allowedVisitIds: visitIds,
+    status: 'verified',
+  })
   const purchaseIntent = countStitchedEventIdentities({
     visits: params.visits,
     visitById: params.visitById,
@@ -806,6 +815,7 @@ function buildTrafficNode(params: {
     quizStarted,
     quizCompleted,
     emailSubmitted,
+    emailVerified,
     purchaseIntent,
     intentRate: divide(purchaseIntent, visitors),
     costPerIntentCents: purchaseIntent === 0 ? null : Math.round(params.spendCents / purchaseIntent),

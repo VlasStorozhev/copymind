@@ -221,6 +221,7 @@ function TrafficTreeSection({
               <TableHead>Quiz Started</TableHead>
               <TableHead>Quiz Completed</TableHead>
               <TableHead>Email Submitted</TableHead>
+              <TableHead>Email Verified</TableHead>
               <TableHead>Purchase Intent</TableHead>
               <TableHead>Intent Rate</TableHead>
               <TableHead>Cost per Intent</TableHead>
@@ -267,6 +268,7 @@ function TrafficTreeSection({
                   <TableCell>{node.quizStarted}</TableCell>
                   <TableCell>{node.quizCompleted}</TableCell>
                   <TableCell>{node.emailSubmitted}</TableCell>
+                  <TableCell>{node.emailVerified}</TableCell>
                   <TableCell>{node.purchaseIntent}</TableCell>
                   <TableCell>{formatPercent(node.intentRate)}</TableCell>
                   <TableCell>{formatCurrencyFromCents(node.costPerIntentCents, summary.currency)}</TableCell>

@@ -50,7 +50,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Intent Profit')).toBeInTheDocument()
     expect(screen.getByText('Intent CPA')).toBeInTheDocument()
     expect(screen.getAllByText('Email Submitted')).toHaveLength(2)
-    expect(screen.getAllByText('Email Verified')).toHaveLength(1)
+    expect(screen.getAllByText('Email Verified')).toHaveLength(2)
     expect(screen.queryByText('Verification Rate')).not.toBeInTheDocument()
     expect(screen.getByText('Business inputs')).toBeInTheDocument()
     expect(screen.getByText('Conversion funnel')).toBeInTheDocument()
