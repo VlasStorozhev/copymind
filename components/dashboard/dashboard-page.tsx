@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 
 import { DashboardSummaryGrid } from '@/components/dashboard/dashboard-summary-grid'
 import { DashboardTableSection } from '@/components/dashboard/dashboard-table-section'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import type { DashboardSummary } from '@/lib/analytics/dashboardTransform'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { DashboardSummary, TrafficTreeNode } from '@/lib/analytics/dashboardTransform'
 
 function formatPercent(value: number | null) {
   if (value === null) {
@@ -67,28 +68,7 @@ export function DashboardPage({
           ])}
         />
 
-        <DashboardTableSection
-          title="Traffic breakdown"
-          description="Spend and purchase-intent efficiency by source, campaign, and creative."
-          columns={[
-            'Dimension',
-            'Value',
-            'Spend',
-            'Landing users',
-            'Paywall CTA clicks',
-            'CTA rate',
-            'Cost per CTA',
-          ]}
-          rows={summary.trafficBreakdown.map((row) => [
-            row.dimension,
-            row.label,
-            formatCurrencyFromCents(row.spendCents, summary.currency),
-            row.landingUsers,
-            row.paywallClicks,
-            formatPercent(row.ctaRate),
-            formatCurrencyFromCents(row.costPerPaywallClickCents, summary.currency),
-          ])}
-        />
+        <TrafficTreeSection summary={summary} />
 
         <DashboardTableSection
           title="Registered-user attribution"
@@ -133,6 +113,114 @@ export function DashboardPage({
 }
 
 type SpendDraft = DashboardSummary['adSpendEntries'][number]
+
+function getDefaultExpandedTrafficNodes(nodes: TrafficTreeNode[]) {
+  return new Set(nodes.map((node) => node.id))
+}
+
+function flattenTrafficNodes(nodes: TrafficTreeNode[], expandedNodes: Set<string>) {
+  const rows: Array<{ node: TrafficTreeNode; depth: number }> = []
+
+  function visit(node: TrafficTreeNode, depth: number) {
+    rows.push({ node, depth })
+
+    if (!expandedNodes.has(node.id)) {
+      return
+    }
+
+    for (const child of node.children) {
+      visit(child, depth + 1)
+    }
+  }
+
+  for (const node of nodes) {
+    visit(node, 0)
+  }
+
+  return rows
+}
+
+function TrafficTreeSection({ summary }: { summary: DashboardSummary }) {
+  const [expandedNodes, setExpandedNodes] = useState(() => getDefaultExpandedTrafficNodes(summary.trafficTree))
+
+  useEffect(() => {
+    setExpandedNodes(getDefaultExpandedTrafficNodes(summary.trafficTree))
+  }, [summary.trafficTree])
+
+  const rows = flattenTrafficNodes(summary.trafficTree, expandedNodes)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Traffic breakdown</CardTitle>
+        <CardDescription>Drill down from source to campaign to creative without duplicating rows.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Source / Campaign / Creative</TableHead>
+              <TableHead>Spend</TableHead>
+              <TableHead>Landing Users</TableHead>
+              <TableHead>Quiz Completed</TableHead>
+              <TableHead>Email Submitted</TableHead>
+              <TableHead>Purchase Intent</TableHead>
+              <TableHead>Intent Rate</TableHead>
+              <TableHead>Cost per Intent</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map(({ node, depth }) => {
+              const isExpanded = expandedNodes.has(node.id)
+              const hasChildren = node.children.length > 0
+
+              return (
+                <TableRow key={node.id} data-testid={`traffic-row-${node.id}`}>
+                  <TableCell>
+                    <div className="flex items-center gap-2" style={{ paddingLeft: `${depth * 1.25}rem` }}>
+                      {hasChildren ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${node.level} ${node.label}`}
+                          aria-expanded={isExpanded}
+                          onClick={() => {
+                            setExpandedNodes((current) => {
+                              const next = new Set(current)
+                              if (next.has(node.id)) {
+                                next.delete(node.id)
+                              } else {
+                                next.add(node.id)
+                              }
+                              return next
+                            })
+                          }}
+                        >
+                          {isExpanded ? <ChevronDown /> : <ChevronRight />}
+                        </Button>
+                      ) : (
+                        <span className="size-6" aria-hidden="true" />
+                      )}
+                      <span className="font-medium">{node.label}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{formatCurrencyFromCents(node.spendCents, summary.currency)}</TableCell>
+                  <TableCell>{node.landingUsers}</TableCell>
+                  <TableCell>{node.quizCompleted}</TableCell>
+                  <TableCell>{node.emailSubmitted}</TableCell>
+                  <TableCell>{node.purchaseIntent}</TableCell>
+                  <TableCell>{formatPercent(node.intentRate)}</TableCell>
+                  <TableCell>{formatCurrencyFromCents(node.costPerIntentCents, summary.currency)}</TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
+}
 
 function DashboardSettingsCard({
   summary,

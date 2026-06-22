@@ -57,15 +57,7 @@ export type DashboardSummary = {
     mostCommonBlocker: string | null
     highestConvertingPattern: string | null
   }>
-  trafficBreakdown: Array<{
-    dimension: 'source' | 'campaign' | 'creative'
-    label: string
-    spendCents: number
-    landingUsers: number
-    paywallClicks: number
-    ctaRate: number | null
-    costPerPaywallClickCents: number | null
-  }>
+  trafficTree: TrafficTreeNode[]
   productPriceCents: number
   currency: string
   adSpendEntries: Array<{
@@ -77,6 +69,20 @@ export type DashboardSummary = {
     spend_cents: number
     currency: string
   }>
+}
+
+export type TrafficTreeNode = {
+  id: string
+  level: 'source' | 'campaign' | 'creative'
+  label: string
+  spendCents: number
+  landingUsers: number
+  quizCompleted: number
+  emailSubmitted: number
+  purchaseIntent: number
+  intentRate: number | null
+  costPerIntentCents: number | null
+  children: TrafficTreeNode[]
 }
 
 type VisitRow = {
@@ -311,78 +317,161 @@ function buildFunnelRows(params: {
   })
 }
 
-function getGroupLabel(visit: VisitRow, dimension: 'source' | 'campaign' | 'creative') {
-  if (dimension === 'source') {
-    return visit.source
-  }
+function escapeTreeIdPart(value: string) {
+  return value.replaceAll('/', '%2F')
+}
 
-  if (dimension === 'campaign') {
-    return visit.campaign ?? 'direct'
-  }
+function getCampaignLabel(visit: Pick<VisitRow, 'campaign'>) {
+  return visit.campaign ?? 'direct'
+}
 
+function getCreativeLabel(visit: Pick<VisitRow, 'content'>) {
   return visit.content ?? 'direct'
 }
 
-function getSpendGroupLabel(
-  entry: NonNullable<DashboardRows['adSpendEntries']>[number],
-  dimension: 'source' | 'campaign' | 'creative',
-) {
-  if (dimension === 'source') {
-    return entry.source
+function sortTrafficNodes(left: TrafficTreeNode, right: TrafficTreeNode) {
+  if (right.purchaseIntent !== left.purchaseIntent) {
+    return right.purchaseIntent - left.purchaseIntent
   }
 
-  if (dimension === 'campaign') {
-    return entry.campaign ?? 'direct'
+  const leftIntentEfficiency = left.intentRate ?? -1
+  const rightIntentEfficiency = right.intentRate ?? -1
+  if (rightIntentEfficiency !== leftIntentEfficiency) {
+    return rightIntentEfficiency - leftIntentEfficiency
   }
 
-  return entry.content ?? 'direct'
+  if (left.costPerIntentCents !== right.costPerIntentCents) {
+    if (left.costPerIntentCents === null) {
+      return 1
+    }
+
+    if (right.costPerIntentCents === null) {
+      return -1
+    }
+
+    return left.costPerIntentCents - right.costPerIntentCents
+  }
+
+  if (right.landingUsers !== left.landingUsers) {
+    return right.landingUsers - left.landingUsers
+  }
+
+  return left.label.localeCompare(right.label)
 }
 
-function buildTrafficBreakdown(params: {
+function buildTrafficNode(params: {
+  id: string
+  level: TrafficTreeNode['level']
+  label: string
+  visits: VisitRow[]
+  spendCents: number
+  eventMap: Map<string, Set<string>>
+  children?: TrafficTreeNode[]
+}): TrafficTreeNode {
+  const landingUsers = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
+  const quizCompleted = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'quiz_completed')).length
+  const emailSubmitted = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'email_submitted')).length
+  const purchaseIntent = params.visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'paywall_cta_clicked')).length
+
+  return {
+    id: params.id,
+    level: params.level,
+    label: params.label,
+    spendCents: params.spendCents,
+    landingUsers,
+    quizCompleted,
+    emailSubmitted,
+    purchaseIntent,
+    intentRate: divide(purchaseIntent, landingUsers),
+    costPerIntentCents: purchaseIntent === 0 ? null : Math.round(params.spendCents / purchaseIntent),
+    children: params.children ?? [],
+  }
+}
+
+function buildTrafficTree(params: {
   visits: VisitRow[]
   eventMap: Map<string, Set<string>>
   adSpendEntries: NonNullable<DashboardRows['adSpendEntries']>
 }) {
-  const dimensions: Array<'source' | 'campaign' | 'creative'> = ['source', 'campaign', 'creative']
+  const sourceLabels = new Set<string>()
 
-  return dimensions.flatMap((dimension) => {
-    const labels = new Set<string>()
+  for (const visit of params.visits) {
+    sourceLabels.add(visit.source)
+  }
 
-    for (const visit of params.visits) {
-      labels.add(getGroupLabel(visit, dimension))
-    }
+  for (const entry of params.adSpendEntries) {
+    sourceLabels.add(entry.source)
+  }
 
-    for (const entry of params.adSpendEntries) {
-      labels.add(getSpendGroupLabel(entry, dimension))
-    }
+  return [...sourceLabels]
+    .map((source) => {
+      const sourceVisits = params.visits.filter((visit) => visit.source === source)
+      const sourceSpendEntries = params.adSpendEntries.filter((entry) => entry.source === source)
+      const campaignLabels = new Set<string>()
 
-    return [...labels]
-      .map((label) => {
-        const visits = params.visits.filter((visit) => getGroupLabel(visit, dimension) === label)
-        const spendCents = params.adSpendEntries
-          .filter((entry) => getSpendGroupLabel(entry, dimension) === label)
-          .reduce((total, entry) => total + entry.spend_cents, 0)
-        const landingUsers = visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'landing_viewed')).length
-        const paywallClicks = visits.filter((visit) => hasEvent(params.eventMap, visit.id, 'paywall_cta_clicked')).length
+      for (const visit of sourceVisits) {
+        campaignLabels.add(getCampaignLabel(visit))
+      }
 
-        return {
-          dimension,
-          label,
-          spendCents,
-          landingUsers,
-          paywallClicks,
-          ctaRate: divide(paywallClicks, landingUsers),
-          costPerPaywallClickCents: paywallClicks === 0 ? null : Math.round(spendCents / paywallClicks),
-        }
+      for (const entry of sourceSpendEntries) {
+        campaignLabels.add(entry.campaign ?? 'direct')
+      }
+
+      const campaignChildren = [...campaignLabels]
+        .map((campaign) => {
+          const campaignVisits = sourceVisits.filter((visit) => getCampaignLabel(visit) === campaign)
+          const campaignSpendEntries = sourceSpendEntries.filter((entry) => (entry.campaign ?? 'direct') === campaign)
+          const creativeLabels = new Set<string>()
+
+          for (const visit of campaignVisits) {
+            creativeLabels.add(getCreativeLabel(visit))
+          }
+
+          for (const entry of campaignSpendEntries) {
+            creativeLabels.add(entry.content ?? 'direct')
+          }
+
+          const creativeChildren = [...creativeLabels]
+            .map((creative) => {
+              const creativeVisits = campaignVisits.filter((visit) => getCreativeLabel(visit) === creative)
+              const creativeSpendCents = campaignSpendEntries
+                .filter((entry) => (entry.content ?? 'direct') === creative)
+                .reduce((total, entry) => total + entry.spend_cents, 0)
+
+              return buildTrafficNode({
+                id: `source:${escapeTreeIdPart(source)}/campaign:${escapeTreeIdPart(campaign)}/creative:${escapeTreeIdPart(creative)}`,
+                level: 'creative',
+                label: creative,
+                visits: creativeVisits,
+                spendCents: creativeSpendCents,
+                eventMap: params.eventMap,
+              })
+            })
+            .sort(sortTrafficNodes)
+
+          return buildTrafficNode({
+            id: `source:${escapeTreeIdPart(source)}/campaign:${escapeTreeIdPart(campaign)}`,
+            level: 'campaign',
+            label: campaign,
+            visits: campaignVisits,
+            spendCents: campaignSpendEntries.reduce((total, entry) => total + entry.spend_cents, 0),
+            eventMap: params.eventMap,
+            children: creativeChildren,
+          })
+        })
+        .sort(sortTrafficNodes)
+
+      return buildTrafficNode({
+        id: `source:${escapeTreeIdPart(source)}`,
+        level: 'source',
+        label: source,
+        visits: sourceVisits,
+        spendCents: sourceSpendEntries.reduce((total, entry) => total + entry.spend_cents, 0),
+        eventMap: params.eventMap,
+        children: campaignChildren,
       })
-      .sort((left, right) => {
-        if (right.paywallClicks !== left.paywallClicks) {
-          return right.paywallClicks - left.paywallClicks
-        }
-
-        return left.label.localeCompare(right.label)
-      })
-  })
+    })
+    .sort(sortTrafficNodes)
 }
 
 function getUniqueEventActors(params: {
@@ -667,7 +756,7 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
     registeredUsers,
     patternBreakdown,
     sourceByPattern,
-    trafficBreakdown: buildTrafficBreakdown({
+    trafficTree: buildTrafficTree({
       visits: rows.visits,
       eventMap,
       adSpendEntries,

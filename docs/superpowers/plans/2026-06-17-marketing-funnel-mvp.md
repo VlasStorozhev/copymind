@@ -1101,7 +1101,7 @@ Return:
 - `businessMetrics`
 - `funnelConversion`
 - `sourceBreakdown`
-- `trafficBreakdown`
+- `trafficTree`
 - `registeredUsers`
 - `patternBreakdown`
 - `sourceByPattern`
@@ -1113,7 +1113,7 @@ Return:
 Use shadcn/ui:
 
 - `Card` for summary metrics
-- `Table` for conversions, source breakdown, attribution
+- `Table` for conversions, hierarchical traffic breakdown, attribution
 - `Badge` for source/status/user state
 - `Skeleton` for loading states
 

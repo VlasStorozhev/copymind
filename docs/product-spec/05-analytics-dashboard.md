@@ -10,7 +10,7 @@ UI:
 
 - Build the dashboard with Tailwind CSS and shadcn/ui.
 - Use `Card` for top-level metric summaries.
-- Use `Table` for funnel steps, source breakdown, and attribution views.
+- Use `Table` for funnel steps, hierarchical traffic drill-down, and attribution views.
 - Use `Tabs` only if the dashboard needs clear separation between funnel, source, and product intelligence sections.
 - Use `Badge` for source, status, and user state labels.
 - Use `Skeleton` or loading states while dashboard data loads.
@@ -78,22 +78,26 @@ The MVP dashboard period is all-time.
 
 ### Source Attribution
 
-Source breakdown:
+Traffic breakdown tree:
 
-- source
-- medium
-- campaign
-- content
+- source, from `utm_source`
+- campaign, from `utm_campaign`
+- creative, from `utm_content`
 - spend
-- visits
+- landing users
 - quiz completions
 - email submissions
-- mock paywall section views
-- paywall CTA clicks
-- conversion rates
-- cost per paywall CTA click
+- purchase intent
+- intent rate
+- cost per intent
 
-Traffic breakdown should prioritize source, campaign, and creative (`utm_content`) rows that explain where spend is producing purchase intent.
+Traffic breakdown must be hierarchical and expandable:
+
+- Source rows expand to Campaign rows.
+- Campaign rows expand to Creative rows.
+- Source rows are expanded by default.
+- Campaign and Creative rows are collapsed by default.
+- Metrics aggregate at every level so the dashboard can identify winning channels, campaigns, and creatives without duplicating rows.
 
 The dashboard should distinguish visit-source reporting from user-source reporting:
 

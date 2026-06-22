@@ -47,8 +47,8 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Business inputs')).toBeInTheDocument()
     expect(screen.getByText('Conversion funnel')).toBeInTheDocument()
     expect(screen.getByText('Traffic breakdown')).toBeInTheDocument()
-    expect(screen.getByText('Paywall CTA clicks')).toBeInTheDocument()
-    expect(screen.getByText('Cost per CTA')).toBeInTheDocument()
+    expect(screen.getByText('Purchase Intent')).toBeInTheDocument()
+    expect(screen.getByText('Cost per Intent')).toBeInTheDocument()
     expect(screen.getByText('Registered-user attribution')).toBeInTheDocument()
     expect(screen.getByText('First-touch creative')).toBeInTheDocument()
     expect(screen.getByText('Product interest')).toBeInTheDocument()
@@ -63,6 +63,35 @@ describe('DashboardPage', () => {
     expect(screen.queryByText('Magic links verified')).not.toBeInTheDocument()
     expect(screen.queryByText('Paywall views')).not.toBeInTheDocument()
     expect(screen.queryByText('Magic-link verification rate')).not.toBeInTheDocument()
+  })
+
+  it('renders traffic breakdown as an expandable source campaign creative tree', async () => {
+    const user = userEvent.setup()
+    const fixture = buildDashboardFixture()
+    const summary = buildDashboardSummary({
+      visits: fixture.visits,
+      funnelEvents: fixture.funnelEvents,
+      quizResponses: fixture.quizResponses,
+      userProfiles: fixture.userProfiles,
+      dashboardSettings: fixture.dashboardSettings,
+      adSpendEntries: fixture.adSpendEntries,
+    })
+
+    render(<DashboardPage summary={summary} userEmail="admin@example.com" />)
+
+    expect(screen.getByRole('button', { name: 'Collapse source facebook' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Expand campaign retargeting' })).toBeInTheDocument()
+    expect(screen.queryByTestId('traffic-row-source:facebook/campaign:retargeting/creative:video-1')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Expand campaign retargeting' }))
+
+    expect(screen.getByTestId('traffic-row-source:facebook/campaign:retargeting/creative:video-1')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Collapse campaign retargeting' })).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Collapse source facebook' }))
+
+    expect(screen.queryByTestId('traffic-row-source:facebook/campaign:retargeting')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('traffic-row-source:facebook/campaign:retargeting/creative:video-1')).not.toBeInTheDocument()
   })
 
   it('removes a spend row from the saved business inputs payload', async () => {
