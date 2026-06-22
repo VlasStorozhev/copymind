@@ -43,6 +43,8 @@ Core funnel metrics:
 - quiz starts
 - quiz completions
 - email submissions
+- email verified
+- verification rate
 - result views
 - purchase intent
 - new users
@@ -55,7 +57,8 @@ Single end-to-end conversion table:
 - visitors -> quiz started
 - quiz started -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> result viewed
+- email submitted -> email verified
+- email verified -> result viewed
 - result viewed -> purchase intent
 
 The main dashboard must not split the primary funnel into anonymous and authenticated tables. Authenticated repeat behavior can remain a secondary diagnostic if needed, but it should not compete with the end-to-end validation funnel.

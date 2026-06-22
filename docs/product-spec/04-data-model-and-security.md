@@ -109,6 +109,48 @@ Resend behavior:
 - When a later quiz email-capture attempt is verified, older pending attempts for the same `quiz_response_id` should be marked `expired` or ignored for callback matching.
 - When a later returning-login attempt is verified, older pending returning-login attempts for the same normalized email should be marked `expired` or ignored for callback matching.
 
+### email_leads
+
+`email_leads` stores submitted emails immediately, before Supabase email verification succeeds. It lets the dashboard distinguish product drop-off from email delivery or verification issues.
+
+- `id`
+- `normalized_email`
+- `email`
+- `status`
+- `user_id`
+- `visitor_id`
+- `visit_id`
+- `first_submitted_at`
+- `last_submitted_at`
+- `verified_at`
+- `created_at`
+- `updated_at`
+
+Allowed `status` values:
+
+- `pending_verification`
+- `verified`
+
+Rules:
+
+- A valid submitted email should be saved immediately with `pending_verification`.
+- Email storage must not depend on the user opening the magic link.
+- Re-submitting an already verified email must not downgrade the lead status.
+- Successful magic-link callback should update the matching lead to `verified`.
+
+Constraints and indexes:
+
+- `id` primary key
+- `normalized_email` unique
+- `visit_id` references `visits(id)` on delete set null
+- `user_id` references `auth.users(id)` on delete set null
+- index on `status`
+- index on `user_id`
+- index on `visitor_id`
+- index on `visit_id`
+- index on `last_submitted_at`
+- index on `verified_at`
+
 ### funnel_events
 
 - `id`

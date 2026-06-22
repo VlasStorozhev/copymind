@@ -171,13 +171,14 @@ type DashboardRows = {
   }>
 }
 
-const FUNNEL_STEPS: Array<{ label: string; eventName: string | null }> = [
-  { label: 'Visitors', eventName: null },
-  { label: 'Quiz Started', eventName: 'quiz_started' },
-  { label: 'Quiz Completed', eventName: 'quiz_completed' },
-  { label: 'Email Submitted', eventName: 'email_submitted' },
-  { label: 'Result Viewed', eventName: 'result_viewed' },
-  { label: 'Purchase Intent', eventName: 'paywall_cta_clicked' },
+const FUNNEL_STEPS: Array<{ label: string; eventNames: string[] | null }> = [
+  { label: 'Visitors', eventNames: null },
+  { label: 'Quiz Started', eventNames: ['quiz_started'] },
+  { label: 'Quiz Completed', eventNames: ['quiz_completed'] },
+  { label: 'Email Submitted', eventNames: ['email_submitted'] },
+  { label: 'Email Verified', eventNames: ['email_verified', 'magic_link_verified'] },
+  { label: 'Result Viewed', eventNames: ['result_viewed'] },
+  { label: 'Purchase Intent', eventNames: ['paywall_cta_clicked'] },
 ]
 
 const EXCLUDED_ACQUISITION_PATH_PREFIXES = [
@@ -296,6 +297,30 @@ function countAcquisitionActorsWithEvent(params: {
   return actors.size
 }
 
+function countAcquisitionActorsWithAnyEvent(params: {
+  visits: VisitRow[]
+  eventMap: Map<string, Set<string>>
+  acquisitionActors: Set<string>
+  eventNames: string[]
+}) {
+  const actors = new Set<string>()
+
+  for (const visit of params.visits) {
+    const actorKey = getVisitActorKey(visit)
+    const eventSet = params.eventMap.get(visit.id)
+
+    if (!params.acquisitionActors.has(actorKey) || !eventSet) {
+      continue
+    }
+
+    if (params.eventNames.some((eventName) => eventSet.has(eventName))) {
+      actors.add(actorKey)
+    }
+  }
+
+  return actors.size
+}
+
 function getLatestQuizResponseByUser(quizResponses: QuizResponseRow[]) {
   const byUser = new Map<string, QuizResponseRow[]>()
 
@@ -364,6 +389,14 @@ function formatRoas(value: number | null) {
   return `${value.toFixed(2)}x`
 }
 
+function formatPercent(value: number | null) {
+  if (value === null) {
+    return '—'
+  }
+
+  return `${Math.round(value * 100)}%`
+}
+
 function getTotalSpendCents(adSpendEntries: DashboardRows['adSpendEntries']) {
   return (adSpendEntries ?? []).reduce((total, entry) => total + entry.spend_cents, 0)
 }
@@ -388,13 +421,13 @@ function buildFunnelRows(params: {
 
   return FUNNEL_STEPS.map((step) => {
     const users =
-      step.eventName === null
+      step.eventNames === null
         ? visitors
-        : countAcquisitionActorsWithEvent({
+        : countAcquisitionActorsWithAnyEvent({
             visits: params.visits,
             eventMap: params.eventMap,
             acquisitionActors,
-            eventName: step.eventName,
+            eventNames: step.eventNames,
           })
     const row = {
       step: step.label,
@@ -638,6 +671,19 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
   const productPriceCents = rows.dashboardSettings?.product_price_cents ?? 900
   const currency = rows.dashboardSettings?.currency ?? 'USD'
   const totalSpendCents = getTotalSpendCents(adSpendEntries)
+  const acquisitionActors = getAcquisitionVisitorActors(rows.visits, eventMap)
+  const emailSubmittedActors = countAcquisitionActorsWithEvent({
+    visits: rows.visits,
+    eventMap,
+    acquisitionActors,
+    eventName: 'email_submitted',
+  })
+  const emailVerifiedActors = countAcquisitionActorsWithAnyEvent({
+    visits: rows.visits,
+    eventMap,
+    acquisitionActors,
+    eventNames: ['email_verified', 'magic_link_verified'],
+  })
   const paywallClickActors = getUniqueEventActors({
     eventName: 'paywall_cta_clicked',
     funnelEvents: rows.funnelEvents,
@@ -842,6 +888,13 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
         label: 'Purchase Intent',
         value: String(purchaseIntentActors),
         description: 'Unique users who clicked the paywall CTA',
+      },
+      { label: 'Email Submitted', value: String(emailSubmittedActors) },
+      { label: 'Email Verified', value: String(emailVerifiedActors) },
+      {
+        label: 'Verification Rate',
+        value: formatPercent(divide(emailVerifiedActors, emailSubmittedActors)),
+        description: 'Email verified / email submitted',
       },
     ],
     summaryMetrics: [

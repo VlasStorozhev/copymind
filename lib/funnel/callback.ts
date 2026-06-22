@@ -3,6 +3,7 @@ import {
   type AuthAttemptRepository,
   verifyAuthAttemptAndUpsertProfile,
 } from '@/lib/auth/attempts'
+import { normalizeEmail } from '@/lib/auth/profiles'
 import type { UserProfileRecord, UserProfileRepository } from '@/lib/auth/profiles'
 
 export type MagicLinkFailureReason =
@@ -43,6 +44,29 @@ export function resolveAuthAttemptIdFromCallback(input: {
   cookieAuthAttemptId?: string | null
 }) {
   return input.queryAuthAttemptId || input.cookieAuthAttemptId || null
+}
+
+export function resolveFallbackAuthAttempt(input: {
+  attempts: AuthAttemptRecord[]
+  authenticatedEmail: string
+  now?: string
+}) {
+  const normalizedEmail = normalizeEmail(input.authenticatedEmail)
+  const now = input.now ?? new Date().toISOString()
+
+  return input.attempts
+    .filter((attempt) => attempt.normalized_email === normalizedEmail)
+    .filter((attempt) => attempt.status === 'pending')
+    .filter((attempt) => attempt.expires_at > now)
+    .sort((left, right) => {
+      const createdAtCompare = left.created_at.localeCompare(right.created_at)
+      if (createdAtCompare !== 0) {
+        return createdAtCompare
+      }
+
+      return left.id.localeCompare(right.id)
+    })
+    .at(-1) ?? null
 }
 
 function mapAttemptFailureReason(

@@ -124,6 +124,59 @@ export type Database = {
           },
         ]
       }
+      email_leads: {
+        Row: {
+          created_at: string
+          email: string
+          first_submitted_at: string
+          id: string
+          last_submitted_at: string
+          normalized_email: string
+          status: string
+          updated_at: string
+          user_id: string | null
+          verified_at: string | null
+          visit_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          first_submitted_at?: string
+          id?: string
+          last_submitted_at?: string
+          normalized_email: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          verified_at?: string | null
+          visit_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_submitted_at?: string
+          id?: string
+          last_submitted_at?: string
+          normalized_email?: string
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          verified_at?: string | null
+          visit_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_leads_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_spend_entries: {
         Row: {
           campaign: string | null

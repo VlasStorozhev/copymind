@@ -9,6 +9,7 @@ The implementation should use a single canonical list of funnel events:
 - `quiz_completed`
 - `email_viewed`
 - `email_submitted`
+- `email_verified`
 - `magic_link_sent`
 - `magic_link_verified`
 - `magic_link_failed`
@@ -27,6 +28,7 @@ Recommended event metadata:
 - `quiz_question_answered`: `{ "question_id": "...", "answer_id": "..." }`
 - `paywall_cta_clicked`: `{ "cta_label": "Buy" }`
 - `email_submitted`: `{ "auth_provider": "supabase", "method": "magic_link", "auth_attempt_id": "..." }`
+- `email_verified`: `{ "auth_provider": "supabase", "auth_attempt_id": "..." }`
 - `magic_link_sent`: `{ "auth_provider": "supabase", "auth_attempt_id": "..." }`
 - `magic_link_verified`: `{ "auth_provider": "supabase", "auth_attempt_id": "..." }`
 - `magic_link_failed`: `{ "auth_provider": "supabase", "auth_attempt_id": "...", "reason": "expired" | "used" | "invalid" | "missing_context" | "email_mismatch" | "unknown" }`
@@ -43,6 +45,8 @@ Primary funnel reporting should use unique acquisition visitors unless a metric 
 - `quiz starts`: unique acquisition visitors with `quiz_started`.
 - `quiz completions`: unique acquisition visitors with `quiz_completed`.
 - `email submissions`: unique acquisition visitors with successful `email_submitted`.
+- `email verified`: unique acquisition visitors with `email_verified` or legacy `magic_link_verified`.
+- `verification rate`: `email verified / email submissions`.
 - `result views`: unique acquisition visitors with `result_viewed`.
 - `purchase intent`: unique acquisition visitors with `paywall_cta_clicked`. This is the MVP North Star and proxy purchase signal until checkout exists.
 - `new users`: unique Supabase Auth users first verified in the selected period.
@@ -55,7 +59,8 @@ The primary conversion dashboard should use this sequence:
 - visitors -> quiz started
 - quiz started -> quiz completed
 - quiz completed -> email submitted
-- email submitted -> result viewed
+- email submitted -> email verified
+- email verified -> result viewed
 - result viewed -> paywall CTA clicked
 
 Authenticated repeat-quiz conversion can be used as a secondary diagnostic, but it should not appear as a separate primary dashboard funnel.

@@ -323,6 +323,7 @@ Tracking:
 
 - `email_viewed`
 - `email_submitted`
+- `email_verified`
 - `magic_link_sent`
 - `magic_link_verified`
 - `magic_link_failed`

@@ -11,6 +11,7 @@ import { getOrCreateVisitorId } from '@/lib/analytics/visitor'
 import { getOrCreateVisit, recordFunnelEvent } from '@/lib/funnel/db'
 import { getAuthRedirectBaseUrl } from '@/lib/env'
 import { getGeneratedMagicLink, isEmailRateLimitError } from '@/lib/auth/magic-link'
+import { savePendingEmailLead } from '@/lib/auth/leads'
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
@@ -60,6 +61,15 @@ export async function POST(request: Request) {
   if (!visit) {
     return NextResponse.json({ error: 'Could not load visit context' }, { status: 500 })
   }
+
+  const normalizedEmail = normalizeEmail(email)
+  await savePendingEmailLead({
+    client: adminClient,
+    email,
+    visitorId,
+    visitId: visit.id,
+    userId: user?.id ?? null,
+  })
 
   const existingQuizResponse =
     attemptType === 'quiz_email_capture'
@@ -165,7 +175,7 @@ export async function POST(request: Request) {
             },
           },
           quizResponseId: existingQuizResponse.quizResponse!.id,
-          normalizedEmail: normalizeEmail(email),
+          normalizedEmail,
           visitorId,
           visitId: visit.id,
           expiresAt,
@@ -218,7 +228,7 @@ export async function POST(request: Request) {
               throw new Error('not implemented')
             },
           },
-          normalizedEmail: normalizeEmail(email),
+          normalizedEmail,
           visitorId,
           visitId: visit.id,
           expiresAt,

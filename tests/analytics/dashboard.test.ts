@@ -22,6 +22,9 @@ describe('buildDashboardSummary', () => {
       { label: 'ROAS', value: '0.12x' },
       { label: 'Intent CPA', value: '$75.00', description: 'Spend / purchase intent' },
       { label: 'Purchase Intent', value: '2', description: 'Unique users who clicked the paywall CTA' },
+      { label: 'Email Submitted', value: '1' },
+      { label: 'Email Verified', value: '1' },
+      { label: 'Verification Rate', value: '100%', description: 'Email verified / email submitted' },
     ])
 
     expect(summary.funnelConversion).toEqual([
@@ -50,6 +53,13 @@ describe('buildDashboardSummary', () => {
         step: 'Email Submitted',
         users: 1,
         conversionFromPrevious: 0.5,
+        conversionFromVisitors: 1 / 3,
+        costPerUserCents: 15000,
+      },
+      {
+        step: 'Email Verified',
+        users: 1,
+        conversionFromPrevious: 1,
         conversionFromVisitors: 1 / 3,
         costPerUserCents: 15000,
       },
@@ -171,6 +181,7 @@ describe('buildDashboardSummary', () => {
       ['Quiz Started', 3],
       ['Quiz Completed', 3],
       ['Email Submitted', 2],
+      ['Email Verified', 1],
       ['Result Viewed', 3],
       ['Purchase Intent', 3],
     ])

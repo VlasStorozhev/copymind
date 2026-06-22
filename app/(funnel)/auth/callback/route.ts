@@ -6,11 +6,13 @@ import { createClient as createAdminClient } from '@/lib/supabase/admin'
 import {
   resolveAuthAttemptIdFromCallback,
   resolveCallbackSource,
+  resolveFallbackAuthAttempt,
   resolveMagicLinkCallback,
   type MagicLinkFailureReason,
 } from '@/lib/funnel/callback'
 import { recordFunnelEvent } from '@/lib/funnel/db'
 import { type AuthAttemptRecord, type AuthAttemptRepository } from '@/lib/auth/attempts'
+import { markEmailLeadVerified } from '@/lib/auth/leads'
 import { normalizeEmail, type UserProfileRecord, type UserProfileRepository } from '@/lib/auth/profiles'
 
 function getFailureRedirect(
@@ -350,7 +352,25 @@ export async function GET(request: Request) {
       }
     : { source: 'direct', medium: null, campaign: null, content: null }
 
-  if (!authAttemptId) {
+  let resolvedAuthAttemptId = authAttemptId
+  let fallbackAttempt: AuthAttemptRecord | null = null
+
+  if (!resolvedAuthAttemptId && authenticatedUser.email) {
+    const { data } = await adminClient
+      .from('auth_attempts')
+      .select('id, attempt_type, normalized_email, quiz_response_id, redirect_path, status, user_id, verified_at, visit_id, visitor_id, created_at, expires_at')
+      .eq('normalized_email', normalizeEmail(authenticatedUser.email))
+      .order('created_at', { ascending: true })
+
+    fallbackAttempt = resolveFallbackAuthAttempt({
+      attempts: (data ?? []) as AuthAttemptRecord[],
+      authenticatedEmail: authenticatedUser.email,
+      now: new Date().toISOString(),
+    })
+    resolvedAuthAttemptId = fallbackAttempt?.id ?? null
+  }
+
+  if (!resolvedAuthAttemptId) {
     if (latestVisit.data) {
       await recordFunnelEvent({
         client: adminClient,
@@ -369,7 +389,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL('/login?auth_error=missing_context', request.url))
   }
 
-  const attempt = await authAttemptRepo.getAttemptById(authAttemptId)
+  const attempt = fallbackAttempt ?? (await authAttemptRepo.getAttemptById(resolvedAuthAttemptId))
   const attemptVisit = attempt?.visit_id ? await loadAttemptVisitSource(adminClient, attempt.visit_id) : { data: null }
   const source = resolveCallbackSource({
     attemptVisitSource: attemptVisit.data
@@ -382,13 +402,14 @@ export async function GET(request: Request) {
       : null,
     fallbackSource,
   })
+  const authenticatedAt = new Date().toISOString()
   const result = await resolveMagicLinkCallback({
-    authAttemptId,
+    authAttemptId: resolvedAuthAttemptId,
     authenticatedUser: {
       id: authenticatedUser.id,
       email: authenticatedUser.email ?? null,
     },
-    authenticatedAt: new Date().toISOString(),
+    authenticatedAt,
     source,
     authAttemptRepo,
     profileRepo,
@@ -418,7 +439,7 @@ export async function GET(request: Request) {
         userId: authenticatedUser.id,
         metadata: {
           auth_provider: 'supabase',
-          auth_attempt_id: authAttemptId,
+          auth_attempt_id: resolvedAuthAttemptId,
           reason: result.reason,
         },
       })
@@ -428,7 +449,25 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(redirectPath, request.url))
   }
 
+  await markEmailLeadVerified({
+    client: adminClient,
+    normalizedEmail: result.attempt.normalized_email,
+    userId: authenticatedUser.id,
+    verifiedAt: authenticatedAt,
+  })
+
   if (result.attempt.visit_id) {
+    await recordFunnelEvent({
+      client: adminClient,
+      visitId: result.attempt.visit_id,
+      eventName: 'email_verified',
+      userId: authenticatedUser.id,
+      metadata: {
+        auth_provider: 'supabase',
+        auth_attempt_id: resolvedAuthAttemptId,
+      },
+    })
+
     await recordFunnelEvent({
       client: adminClient,
       visitId: result.attempt.visit_id,
@@ -436,7 +475,7 @@ export async function GET(request: Request) {
       userId: authenticatedUser.id,
       metadata: {
         auth_provider: 'supabase',
-        auth_attempt_id: authAttemptId,
+        auth_attempt_id: resolvedAuthAttemptId,
       },
     })
 

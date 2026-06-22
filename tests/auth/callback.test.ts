@@ -8,7 +8,12 @@ import {
 } from '@/lib/auth/attempts'
 import type { UserProfileRecord, UserProfileRepository } from '@/lib/auth/profiles'
 import { resolveQuizEmailCaptureStart } from '@/lib/funnel/auth-start'
-import { resolveAuthAttemptIdFromCallback, resolveCallbackSource, resolveMagicLinkCallback } from '@/lib/funnel/callback'
+import {
+  resolveAuthAttemptIdFromCallback,
+  resolveCallbackSource,
+  resolveFallbackAuthAttempt,
+  resolveMagicLinkCallback,
+} from '@/lib/funnel/callback'
 
 function createAttemptRepositoryFixture() {
   const attempts: AuthAttemptRecord[] = []
@@ -156,6 +161,40 @@ describe('resolveMagicLinkCallback', () => {
         cookieAuthAttemptId: 'attempt_from_cookie',
       }),
     ).toBe('attempt_from_query')
+  })
+
+  it('recovers the latest pending auth attempt by authenticated email when callback context is missing', async () => {
+    const { attempts, repo } = createAttemptRepositoryFixture()
+
+    await createQuizEmailCaptureAttempt({
+      repo,
+      quizResponseId: 'quiz_1',
+      normalizedEmail: 'test@example.com',
+      visitorId: 'visitor_1',
+      visitId: 'visit_1',
+      redirectPath: '/app',
+      expiresAt: '2026-01-02T00:00:00.000Z',
+      createId: () => 'attempt_1',
+      createdAt: '2026-01-01T00:00:00.000Z',
+    })
+    await createReturningLoginAttempt({
+      repo,
+      normalizedEmail: 'test@example.com',
+      visitorId: 'visitor_2',
+      visitId: 'visit_2',
+      redirectPath: '/app',
+      expiresAt: '2026-01-03T00:00:00.000Z',
+      createId: () => 'attempt_2',
+      createdAt: '2026-01-02T00:00:00.000Z',
+    })
+
+    expect(
+      resolveFallbackAuthAttempt({
+        attempts,
+        authenticatedEmail: ' TEST@example.com ',
+        now: '2026-01-02T12:00:00.000Z',
+      })?.id,
+    ).toBe('attempt_2')
   })
 
   it('prefers attribution from the stored auth attempt visit over callback browser fallback', () => {
