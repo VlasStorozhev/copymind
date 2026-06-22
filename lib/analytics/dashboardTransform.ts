@@ -58,6 +58,14 @@ export type DashboardSummary = {
     highestConvertingPattern: string | null
   }>
   trafficTree: TrafficTreeNode[]
+  pendingEmailLeads: Array<{
+    email: string
+    submittedAt: string
+    source: string | null
+    medium: string | null
+    campaign: string | null
+    content: string | null
+  }>
   productPriceCents: number
   currency: string
   adSpendEntries: Array<{
@@ -151,11 +159,22 @@ type UserProfileRow = {
   updated_at: string
 }
 
+type EmailLeadRow = {
+  id: string
+  email: string
+  status: string
+  visitor_id: string | null
+  visit_id: string | null
+  first_submitted_at: string
+  last_submitted_at: string
+}
+
 type DashboardRows = {
   visits: VisitRow[]
   funnelEvents: FunnelEventRow[]
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
+  emailLeads?: EmailLeadRow[]
   dashboardSettings?: {
     product_price_cents: number
     currency: string
@@ -761,6 +780,31 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       }
     })
 
+  const registeredEmailSet = new Set(rows.userProfiles.map((profile) => profile.email.trim().toLowerCase()))
+  const pendingEmailLeads = [...(rows.emailLeads ?? [])]
+    .filter((lead) => lead.status === 'pending_verification')
+    .filter((lead) => !registeredEmailSet.has(lead.email.trim().toLowerCase()))
+    .sort((left, right) => {
+      const submittedCompare = right.last_submitted_at.localeCompare(left.last_submitted_at)
+      if (submittedCompare !== 0) {
+        return submittedCompare
+      }
+
+      return left.email.localeCompare(right.email)
+    })
+    .map((lead) => {
+      const visit = lead.visit_id ? (visitById.get(lead.visit_id) ?? null) : null
+
+      return {
+        email: lead.email,
+        submittedAt: lead.last_submitted_at,
+        source: visit?.source ?? null,
+        medium: visit?.medium ?? null,
+        campaign: visit?.campaign ?? null,
+        content: visit?.content ?? null,
+      }
+    })
+
   const patternRows = new Map<
     string,
     {
@@ -929,6 +973,7 @@ export function buildDashboardSummary(rows: DashboardRows): DashboardSummary {
       eventMap,
       adSpendEntries,
     }),
+    pendingEmailLeads,
     productPriceCents,
     currency,
     adSpendEntries: adSpendEntries.map((entry) => ({

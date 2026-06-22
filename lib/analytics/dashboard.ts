@@ -89,11 +89,22 @@ type AdSpendEntryRow = {
   updated_at: string
 }
 
+type EmailLeadRow = {
+  id: string
+  email: string
+  status: string
+  visitor_id: string | null
+  visit_id: string | null
+  first_submitted_at: string
+  last_submitted_at: string
+}
+
 export type DashboardRows = {
   visits: VisitRow[]
   funnelEvents: FunnelEventRow[]
   quizResponses: QuizResponseRow[]
   userProfiles: UserProfileRow[]
+  emailLeads: EmailLeadRow[]
   dashboardSettings: DashboardSettingsRow | null
   adSpendEntries: AdSpendEntryRow[]
 }
@@ -101,35 +112,49 @@ export type DashboardRows = {
 export async function loadDashboardRows(): Promise<DashboardRows> {
   const client = createAdminClient()
 
-  const [visitsResult, funnelEventsResult, quizResponsesResult, userProfilesResult, dashboardSettingsResult, adSpendEntriesResult] =
-    await Promise.all([
-      loadVisits(client),
-      client.from('funnel_events').select('id, visit_id, event_type, user_id, step, metadata, created_at'),
-      client
-        .from('quiz_responses')
-        .select(
-          'id, visitor_id, user_id, visit_id, answers, gender, current_decision, decision_context, decision_pattern, primary_blocker, emotional_driver, support_preference, recommended_starting_point, confidence, created_at, updated_at, completed_at',
-        ),
-      loadUserProfiles(client),
-      client
-        .from('dashboard_settings')
-        .select('id, product_price_cents, currency, created_at, updated_at')
-        .eq('id', 'default')
-        .maybeSingle(),
-      client
-        .from('ad_spend_entries')
-        .select('id, source, medium, campaign, content, spend_cents, currency, created_at, updated_at')
-        .order('created_at', { ascending: true }),
-    ])
+  const [
+    visitsResult,
+    funnelEventsResult,
+    quizResponsesResult,
+    userProfilesResult,
+    emailLeadsResult,
+    dashboardSettingsResult,
+    adSpendEntriesResult,
+  ] = await Promise.all([
+    loadVisits(client),
+    client.from('funnel_events').select('id, visit_id, event_type, user_id, step, metadata, created_at'),
+    client
+      .from('quiz_responses')
+      .select(
+        'id, visitor_id, user_id, visit_id, answers, gender, current_decision, decision_context, decision_pattern, primary_blocker, emotional_driver, support_preference, recommended_starting_point, confidence, created_at, updated_at, completed_at',
+      ),
+    loadUserProfiles(client),
+    client
+      .from('email_leads')
+      .select('id, email, status, visitor_id, visit_id, first_submitted_at, last_submitted_at')
+      .eq('status', 'pending_verification')
+      .order('last_submitted_at', { ascending: false }),
+    client
+      .from('dashboard_settings')
+      .select('id, product_price_cents, currency, created_at, updated_at')
+      .eq('id', 'default')
+      .maybeSingle(),
+    client
+      .from('ad_spend_entries')
+      .select('id, source, medium, campaign, content, spend_cents, currency, created_at, updated_at')
+      .order('created_at', { ascending: true }),
+  ])
 
   assertDashboardQuery(funnelEventsResult.error, 'funnel_events')
   assertDashboardQuery(quizResponsesResult.error, 'quiz_responses')
+  assertDashboardQuery(emailLeadsResult.error, 'email_leads')
 
   return {
     visits: (visitsResult.data ?? []) as VisitRow[],
     funnelEvents: (funnelEventsResult.data ?? []) as FunnelEventRow[],
     quizResponses: (quizResponsesResult.data ?? []) as QuizResponseRow[],
     userProfiles: (userProfilesResult.data ?? []) as UserProfileRow[],
+    emailLeads: (emailLeadsResult.data ?? []) as EmailLeadRow[],
     dashboardSettings: dashboardSettingsResult.error ? null : ((dashboardSettingsResult.data ?? null) as DashboardSettingsRow | null),
     adSpendEntries: adSpendEntriesResult.error ? [] : ((adSpendEntriesResult.data ?? []) as AdSpendEntryRow[]),
   }

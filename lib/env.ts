@@ -10,9 +10,9 @@ export function getAuthRedirectBaseUrl({
   siteUrl?: string
   requestUrl: string
 }) {
-  if (siteUrl) {
+  try {
+    return new URL(requestUrl).origin
+  } catch {
     return getPublicSiteUrl(siteUrl)
   }
-
-  return new URL(requestUrl).origin
 }

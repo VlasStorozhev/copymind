@@ -107,6 +107,23 @@ export function DashboardPage({
           ])}
         />
 
+        <DashboardTableSection
+          title="Unverified email leads"
+          description="Submitted emails that have not completed magic-link verification yet."
+          columns={['Email', 'Submitted at', 'Source', 'Medium', 'Campaign', 'Creative']}
+          rows={
+            summary.pendingEmailLeads.length > 0
+              ? summary.pendingEmailLeads.map((lead) => [
+                  lead.email,
+                  lead.submittedAt,
+                  lead.source,
+                  lead.medium,
+                  lead.campaign,
+                  lead.content,
+                ])
+              : [['No unverified email leads', '—', '—', '—', '—', '—']]
+          }
+        />
       </div>
     </main>
   )

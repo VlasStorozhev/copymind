@@ -12,11 +12,11 @@ describe('env helpers', () => {
     );
   });
 
-  it('prefers NEXT_PUBLIC_SITE_URL for auth redirects when configured', () => {
+  it('prefers the request origin for auth redirects when NEXT_PUBLIC_SITE_URL points to another domain', () => {
     expect(
       getAuthRedirectBaseUrl({
-        siteUrl: 'https://decisionmind.space/',
-        requestUrl: 'http://localhost:3000/login',
+        siteUrl: 'https://project-jodbb.vercel.app/',
+        requestUrl: 'https://decisionmind.space/login',
       }),
     ).toBe('https://decisionmind.space');
   });
